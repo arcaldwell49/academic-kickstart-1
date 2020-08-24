@@ -1,0 +1,511 @@
+---
+title: Magnitude Based Inference in R and SAS
+author: Aaron Caldwell
+date: '2020-05-04'
+slug: new-mbi
+categories:
+  - R
+  - statistics
+  - SAS
+tags:
+  - magnitude based inference
+  - R
+  - SAS
+  - statistics
+  - MBI
+subtitle: 'Using equivalence, non-inferiority, and minimal effects testing'
+summary: ''
+authors: []
+lastmod: '2020-05-04T16:16:58-04:00'
+featured: yes
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+bibliography: [skeleton.bib]
+---
+
+Updated on: `r Sys.Date()`
+
+# Introduction
+
+There have been a number of criticisms of "magnitude-based inferences" [@Batterham_Hopkins_2006] which is a unique approach to statistics in the sport and exercise science community. As an author of the `mbir` package [@R-mbir], I have been watching this all develop closely. What is clear from the criticisms is that MBI has some fatal flaws directly related to the sample size estimations and the interpretations of the probabilities that the MBI spreadsheets provide [@Lohse2020; @Sainani2019; @Sainani_2018]. One of my motivations for helping make `mbir` was to ensure there was version control of this technique, and that any changes to MBI would be well-documented. Now is the time for changes, and in this short post I will document how apply MBI in a frequentist hypothesis testing framework. The statistical reasoning behind this approach has been outlined in detail by @Aisbett2020. I was lucky enough to provide feedback on an earlier version of this manuscript and it inspired me to write this blog post. Changes to `mbir` will hopefully come soon once Kyle and I agree upon the appropriate path forward for the package (we may add Bayesian options as well). In this document, I will detail how to implement the approach of @Aisbett2020 in R and SAS. My hope is that with these details sport and exercise scientists can do three things: 1) go beyond relying entirely on 'significance', 2) avoid the pitfalls of the "old" MBI, and 3) apply analyses that have been well-documented in the statistics literature.
+
+## Note of caution
+
+This blog post implicitly assumes researchers are interested in *testing hypotheses*. 
+This is often not the case for many sport scientists. 
+Researchers may simply want to *estimate* the magnitude an effect, or may be using inferential statistics as descriptions of the data [@chow2019semantic; @s2019aid; @Amrhein2019].
+Personally, I have no problem with these approaches and would highly recommend the `concurve` R package as a visualization tool if that is your intention [@concurve].
+
+# The Basic Concepts
+
+For those of you that have not read @Aisbett2020, I will quickly detail what their approach entails. The primary point of their paper is that MBI can be described as combination of two one-sided tests (TOST) for equivalence testing and minimal effects tests (MET). The difference between this approach and the old MBI approach is that now researchers will have to establish an *a priori* alpha-level, a smallest effect size of interest (SESOI), and justify their sample size on the basis of statistical power. In this format, we must explicitly test hypotheses and remove references to effects being "likely or very likely" or "unclear", but rather state whether the data is "compatible, inconclusive, or ambiguous" depending on the result (See Table 6 of Aisbett, Lakens, & Sainani 2020). There are other more specific recommendations (such as the removal of the odds ratio calculations), and I highly recommend everyone read @Aisbett2020 for more details.
+
+## Terminology 
+
+**Equivalence Testing** is a procedure designed to test whether an effect is contained within an equivalence bound. Many people may be familiar with equivalence testing from using TOST [@Lakens2018]. This establishes a null hypothesis that the effect is greater, or less, than the equivalence bound, and the alternative would be that the effect is within the equivalence bound.
+
+**Minimal Effects Testing** (MET) is a test to determine whether an effect is large enough to be considered meaningful. In contrast to equivalence testing, a null hypothesis in MET is that the effect is less than an minimal effects bound and the alternative would be that the effect is greater than the bound.
+
+**Non-Inferiority Testing** is a test of whether is *not worse* than a inferiority margin. For example, this is commonly used in bio-pharmaceutical trials where a new, typically cheaper, drug is being introduced and the study is completed simply to show it does not perform worse than the existing option(s).
+
+To visualize what these new terms mean, take a look at Figure 1 adapted from @Lakens_Scheel_Isager_2018. A Bayesian interpreation of this can also be found in a recent manuscript from @vanRavenzwaaij2019. In essence, we have 2 sets of tests that MBI is using "under-the-hood" when calculating the percentages for each effect. For mechanistic MBI, the "decisions" are made using a combination of TOST & MET. For clinical MBI, the "decisions" are made with a combination of MET and a non-inferiority test with, most likely, *differing* alphas. Now, under the new approach, you are explicitly stated your hypotheses and testing them with one or combination of the tests listed above. If you read the manuscript by @Aisbett2020 you will see this approach is logical and fairly straight forward. But, I imagine many former MBI are unsure how to accomplish this analysis since (1) this usually is not included in typical statistics education and (2) most have relied upon Hopkins' spreadsheets to automatically perform the necessary calculations. I understand that many sport and exercise scientists do not have the requisite programming experience in SAS and R to feel comfortable with completing these analyses. In my opinion, it is worth the time to learn at least one of these programming languages, but if demand is great enough I will make a spreadsheet and post it to a repository that facilitates version control (e.g., GitHub).
+
+![Figure 1. Comparison of hypothesis tests. The traditional nil-hypothesis tests (a) the null hypothesis that the effect is exactly equal to zero. The minimal effects test (b) tests against a null hypothesis of the true effect falling between the upper and lower equivalence bound, and the equivalence test (c) tests against the null hypothesis that the true effect is outside (greater or less than) the equivalence bound. Finally, the non-inferiority test (d) tests against the null hypothesis that the effect is at least as great as the bound (in one direction).](/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/TestingTypes.PNG)
+
+# Application in R
+
+First, you will need to have the appropriate R packages for these analyses. I prefer to use `afex` [@R-afex] and `emmeans` [@R-emmeans] because I find both pacakges easy to use, but other packages or base R functions could be used for these analyses. If you Google "How do I, insert procedure here, in R" you will likely get a variety of helpful results. So, if the procedures below don't fit you needs then I'm sure there are numerous other resources within R that will be helpful. I highly suggest searching [stackoverflow](https://stackoverflow.com/questions/tagged/r) for potential solutions. We will also use the `tidyverse` package [@R-tidyverse] to help manage the data and `broom` to produce some nice looking tables [@R-broom].
+
+```{r message=FALSE, warning=FALSE}
+#Load the emmeans and afex packages
+library(afex)
+library(emmeans)
+library(tidyverse)
+library(broom)
+```
+
+## Data
+
+Now we need some data to analyze. In R this is straight forward since there are preloaded datasets available. For SAS, I will simply export this data as a csv file then import it into SAS using PROC IMPORT.
+
+```{r}
+#Simple Three-Group 
+data("PlantGrowth")
+
+#Factorial 
+data("ToothGrowth")
+
+```
+
+## PlantGrowth Dataset
+
+```{r fig-plantgrowth, fig.margin = TRUE, fig.cap = "PlantGrowth Data Visualization.", fig.width=5, fig.height=5, cache=TRUE, message=FALSE, echo=FALSE}
+
+ggplot(PlantGrowth, aes(
+  x = as.factor(group),
+  y = weight,
+  color = as.factor(group)
+)) +
+  geom_boxplot() +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 5,
+    size = 4
+  ) +
+  stat_summary(fun = mean,
+               geom = "line",
+               aes(group = 1),
+               colour = "red") +
+  xlab("Group") + ylab("Yield") +
+  ggtitle("Yield by Treatment Condition") +
+  theme(legend.position = "none")
+```
+
+Description:
+
+> "Results from an experiment to compare yields (as measured by dried weight of plants) obtained under a control and two different treatment conditions."
+
+```{r}
+head(PlantGrowth)
+```
+
+## ToothGrowth Dataset
+
+```{r fig-toothgrowth, fig.margin = TRUE, fig.cap = "ToothGrowth Data Visualization.", fig.width=5, fig.height=5, cache=TRUE, message=FALSE, echo=FALSE}
+
+library(tidyverse)
+ggplot(ToothGrowth, aes(
+  x = as.factor(dose),
+  y = len,
+  color = as.factor(supp)
+)) +
+  geom_boxplot() +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    shape = 5,
+    size = 4
+  ) +
+  stat_summary(fun = mean,
+               geom = "line",
+               aes(group = 1),
+               colour = "red") +
+  facet_grid(. ~ supp) +
+  xlab("Dose (mg)") + ylab("Tooth Length") +
+  ggtitle("Tooth Length by Supplement Type Dose") +
+  theme(legend.position = "none")
+```
+
+Description:
+
+> "The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC)."
+
+```{r}
+head(ToothGrowth)
+```
+
+## Analysis of PlantGrowth
+
+We will first have to add an "id" column to the PlantGrowth dataset and then build the ANOVA model using `afex`. In this scenario, we will consider a difference of 1 unit of `weight` to be the SESOI.
+
+```{r}
+PlantGrowth = PlantGrowth %>% 
+  dplyr::mutate(id = rownames(PlantGrowth)) 
+mod_plantgrowth = afex::aov_car(weight ~ group + Error(id), 
+                                data = PlantGrowth)
+tidyaov_plantgrowth = broom::tidy(mod_plantgrowth$aov)
+knitr::kable(tidyaov_plantgrowth)
+
+```
+
+Now, that we have a linear model this can be passed onto the `emmeans` package for equivalence and minimal effects testing.
+
+## Mechanistic (Equivalence-MET) Analysis
+
+```{r}
+
+emm_plants = emmeans(mod_plantgrowth, trt.vs.ctrl1 ~ group, 
+                     adjust = "none") 
+# Sets one group as the control to compare against the treatments
+
+# Note that adjust has to be set to "none" 
+# otherwise the dunnett correction is applied
+knitr::kable(confint(emm_plants$contrasts, level = .9), 
+             caption = "Pairwise Comparisons with 90% C.I.")
+```
+
+```{r}
+#Equivalence Test
+emm_equivalence = test(emm_plants, 
+                       delta = 1, adjust = "none")
+knitr::kable(emm_equivalence$contrasts, 
+             caption = "Equivalence Tests")
+
+```
+
+If we check the 90% confidence intervals, we can see that the upper limit (UL) is lower than the upper equivalence bound, but greater than the lower limit (LL) of the equivalence bound indicating equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that both treatments are statistically equivalent (at least at our prespecified SESOI; `delta` parameter in the `test` function). Notice that only 1 *p*-value is reported, `emmeans` completes equivalence testing by taking the absolute difference between groups.
+
+## Equation `emmeans` appears to be using for equivalence testing:
+
+![](https://render.githubusercontent.com/render/math?math=%24t%20%3D%20%5Cfrac%7B%7CM_%7B1%7D-M_%7B2%7D%7C-%5Cdelta%7D%7BSEM%7D%24)
+
+Where M<sub>1</sub> and M<sub>2</sub> represent the means in condition 1 and condition 2 respectively, and ![](https://render.githubusercontent.com/render/math?math=%24%5Cdelta%24) represents a *symmetrical* equivalence bound, and SEM is the standard error of the mean. 
+
+Also, this is a one-tailed *t*-test:
+
+![](https://render.githubusercontent.com/render/math?math=%24p%20%3D%20Pr(T_%7Bcrit%7D%20%3C%20t)%24)
+
+Not a two-tailed test:
+
+![](https://render.githubusercontent.com/render/math?math=%24p%20%3D%202%20%5Ccdot%20Pr(T_%7Bcrit%7D%20%3E%20%7Ct%7C)%24)
+
+```{r eval=FALSE, include=FALSE}
+# $p = 2 \cdot Pr(T_{crit} > |t|)$
+```
+
+
+While it is unnecessary given the equivalence tests results, let's see how we could perform the METs in both directions (positive and negative).
+
+```{r}
+#Minimal Effects Test: Positive
+emm_MET = test(emm_plants, null = 1, 
+               adjust = "none", side = ">")
+knitr::kable(emm_MET$contrasts, 
+             caption = "Minimal Effects Test: Positive")
+```
+```{r}
+#Minimal Effects Test: Negative
+emm_MET = test(emm_plants, null = -1, adjust = "none", side = "<")
+knitr::kable(emm_MET$contrasts, 
+             caption = "Minimal Effects Test: Negative")
+```
+
+The conclusions from a "mechanistic" inference: **Both treatments, compared to control, are moderately compatible with equivalence**
+
+## Clinical (MET & Non-Inferiority Analysis)
+
+The data can also be interpreted with the "clinical MBI" approach which essentially boils down to a strict (low alpha; default = .005) and a more lax MET for benefit (high alpha; default = .25). In any case, individual researchers should set the alpha-level *a priori* and justify this decision [@lakens-JYA; @blog-JYA].
+
+For simplicity let's keep the defaults for this analysis.
+
+First, we need to perform the non-inferiority tests. Luckily this is easy with `emmeans`.
+
+```{r}
+#Non-Inferiority Test
+emm_nonif = test(emm_plants, delta = 1, 
+                 adjust = "none", 
+                 side = "noninferiority")
+knitr::kable(emm_nonif$contrasts, 
+             caption = "Clinical Non-Inferiority")
+```
+
+Treatment 1 (trt1) is only moderately compatible (given our predetermined alpha) with non-inferiority, but treatment 2 is strongly compatible (*p* < .005) with non-inferiority.
+
+Now we can perform a MET for the benefit, but notice how the use of the `test` function has changed. Now, we call the `null` and `side` parameters to set the threshold and direction of the statistical test. In this case we can keep null as the same value since we are testing a positive effect and side is set to ">" to indicate we are testing for superiority.
+
+```{r}
+#Minimal Effects Test
+emm_nonif = test(emm_plants, null = 1, 
+                 adjust = "none", side = ">")
+knitr::kable(emm_nonif$contrasts, 
+             caption = "Clinical MET")
+```
+
+Conclusion: **Do not use trt1 because we cannot assume non-inferiority. However, we can use trt2, which is compatible with non-inferiority, despite no evidence of any meaningful benefit.**
+
+## Analysis of ToothGrowth Data
+
+Again, we will need to add an "id" column to the ToothGrowth dataset and then build the ANOVA model using `afex`. Notice this time there is a interaction in the ANOVA. Also, in this case, we believe a difference of 3 units in `len` to be the SESOI.
+
+```{r}
+ToothGrowth = ToothGrowth %>% 
+  dplyr::mutate(id = rownames(ToothGrowth)) 
+mod_Toothgrowth = afex::aov_car(len ~ supp*dose + Error(id),
+                                data = ToothGrowth)
+tidyaov_Toothgrowth = broom::tidy(mod_Toothgrowth$aov)
+
+knitr::kable(tidyaov_Toothgrowth)
+
+```
+
+Now that we have a linear model this can be passed onto the `emmeans` package for equivalence and minimal effects testing.
+
+## Mechanistic (Equivalence-MET) Analysis
+
+1. Compare Dosage
+
+First, we want to compare Vitamin C dosage within each delivery method (VC or OJ) to see its effect on tooth growth.
+
+```{r}
+
+emm_Tooths = emmeans(mod_Toothgrowth, 
+                     revpairwise ~ dose|supp, 
+                     adjust = "none") 
+# Pairwise comparisions within each treatment across dosages
+
+# Note that adjust has to be set to "none" 
+# otherwise the dunnett correction is applied
+knitr::kable(confint(emm_Tooths$contrasts, level = .9), 
+             caption = "Pairwise Comparisons with 90% C.I.")
+
+#Equivalence Test
+emm_equivalence = test(emm_Tooths, 
+                       delta = 3, adjust = "none")
+knitr::kable(emm_equivalence$contrasts, 
+             caption = "Equivalence Tests")
+
+```
+
+If we check the 90% confidence intervals, we can see that the lower limit (LL) is higher than the upper equivalence bound, in all but one condition, indicating non-equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that **none** of the doses in either treatment can be considered equivalent.
+
+Now, let's perform the METs in both directions (positive and negative).
+
+```{r}
+#Minimal Effects Test: Positive
+emm_MET = test(emm_Tooths, null = 3, 
+               adjust = "none", side = ">")
+knitr::kable(emm_MET$contrasts, 
+             caption = "Minimal Effects Test: Positive")
+#Minimal Effects Test: Negative
+emm_MET = test(emm_Tooths, null = -3, 
+               adjust = "none", side = "<")
+knitr::kable(emm_MET$contrasts, 
+             caption = "Minimal Effects Test: Negative")
+```
+
+We see that the data, in almost all conditions, is highly compatible with the hypothesis that a higher dosage results in a meaningful positive effect. However, it is inconclusive (non-equivalent and non-positive) if increasing dosage with OJ to 2 from 1 improves tooth growth. 
+
+The conclusions from a "mechanistic" inference: **Increasing dosage of OJ or VC results in increased tooth growth, but it is inconclusive if increasing OJ dosage (from 1 to 2) results in a meaningful improvement.**
+
+2. Compare Delivery Methods
+
+You may want to compare each delivery method at the specified doses. To do so, you simply flip the order of the factors in `emmeans`.
+
+```{r}
+emm_Tooths = emmeans(mod_Toothgrowth, 
+                     revpairwise ~ supp|dose, 
+                     adjust = "none") 
+
+knitr::kable(confint(emm_Tooths$contrasts, level = .9), 
+             caption = "Pairwise Comparisons with 90% C.I.")
+
+#Equivalence Test
+emm_equivalence = test(emm_Tooths, 
+                       delta = 3, adjust = "none")
+knitr::kable(emm_equivalence$contrasts, 
+             caption = "Equivalence Tests")
+
+#Minimal Effects Test: Positive
+emm_MET = test(emm_Tooths, null = 3, 
+               adjust = "none", side = ">")
+knitr::kable(emm_MET$contrasts, 
+             caption = "Minimal Effects Test: Positive")
+#Minimal Effects Test: Negative
+emm_MET = test(emm_Tooths, null = -3, 
+               adjust = "none", side = "<")
+knitr::kable(emm_MET$contrasts, 
+             caption = "Minimal Effects Test: Negative")
+```
+
+Conclusion: **the data is weakly compatible with a negative effect of VC at the lower 2 doses, but is moderately compatible with equivalence at the highest dosage.**
+
+## Clinical (MET & Non-Inferiority Analysis)
+
+For the "clinical MBI" approach let's again use the same alphas as before (non-inferiority: .005 and MET: .25)
+
+For simplicity, let's just compare the delivery methods at each dosage.
+
+```{r}
+#Non-Inferiority Test
+emm_nonif = test(emm_Tooths, delta = 3, 
+                 adjust = "none", 
+                 side = "noninferiority")
+knitr::kable(emm_nonif$contrasts, 
+             caption = "Clinical Non-Inferiority")
+
+#Minimal Effects Test
+emm_nonif = test(emm_Tooths, null = 3, 
+                 adjust = "none", side = ">")
+knitr::kable(emm_nonif$contrasts, 
+             caption = "Clinical MET")
+```
+
+In this case, VC fails to adequately demonstrate non-inferiority.
+
+Conclusion: **Do not use VC at any dosage as it does not demonstrate adequate non-inferiority to OJ, and failed to provide any evidence of having a meaningful positive effect.**
+
+# Application in SAS
+
+For the most part this will be accomplished using SAS's PROC MIXED, but a number of procedures also support these functions [@SAS_lsmestimate]. The only SAS procedure I would suggest *not* using is PROC GLM, as I do not believe SAS has done anything to update this procedure in quite some time. I see no advantage of using PROC GLM over PROC MIXED. For simplicity, I will only being doing one analysis for each dataset.
+
+## Import Data
+
+First, you will need to export the data from R.
+
+```{r eval=FALSE}
+write.csv(ToothGrowth, "tooth.csv")
+
+write.csv(PlantGrowth, "plant.csv")
+```
+
+Now, we can import it into SAS with PROC IMPORT. Remember, to change the file path!
+
+```
+PROC IMPORT OUT= WORK.plant 
+            DATAFILE= "C:\Users\aaron.caldwell\Documents\plant.csv" 
+            DBMS=CSV REPLACE;
+     GETNAMES=YES;
+     DATAROW=2; 
+RUN;
+
+PROC IMPORT OUT= WORK.tooth 
+            DATAFILE= "C:\Users\aaron.caldwell\Documents\tooth.csv" 
+            DBMS=CSV REPLACE;
+     GETNAMES=YES;
+     DATAROW=2; 
+RUN;
+```
+## Analysis of PlantGrowth -- Mechanistic (Equivalence-MET) Analysis
+
+In this scenario, we will consider a difference of 1 unit of `weight` to be the SESOI.
+
+Now, in SAS's PROC MIXED equivalence and minimal effects testing will be carried out via the LSMESTIMATE statement.
+
+```
+
+/*Mechanistic MBI */
+title "Mechanistic MBI: PlantGrowth";
+PROC MIXED data=plant;
+class group;
+model weight = group;
+lsmeans group / CL; /*Gets all the means and CI for each condition*/
+lsmestimate group
+"ctrl v trt1" [1, 1] [-1,2], /*The first number sets the contrast and the assigns the level of group*/
+"ctrl v trt2" [1, 1] [-1,3]
+/ TESTVALUE=-1 UPPER CL; /*Lower bound equivalence test*/
+lsmestimate group
+"ctrl v trt1" [1, 1] [-1,2],
+"ctrl v trt2" [1, 1] [-1,3]
+/ TESTVALUE=1 LOWER CL; /*Upper bound equivalence test*/
+run;
+quit;
+
+```
+
+![Figure 2. LSMESTIMATE Results for Equivalence Testing on Plant Data.](/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/Mech_Eq_Plant.PNG)
+
+If we check the confidence limits, we can see that the upper limit (UL) is lower than the upper equivalence bound, but greater than the lower limit (LL) of the equivalence bound indicating equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that both treatments are statistically equivalent (at least at our prespecified SESOI set by the `TESTVALUE` parameter in the `LSMESTIMATE` statement). Notice that only 2 *p*-values are reported, unlike `emmeans` we must perform an upper bound *and* lower bound test. We only infer equivalence if the *highest* *p*-value for each comparison is less than the predetermined alpha. 
+
+The conclusions from a "mechanistic" inference: **Both treatments, compared to control, are moderately compatible with equivalence**
+
+## ToothGrowth Clinical (MET & Non-Inferiority) Analysis
+
+This is fairly straight forward in SAS. All we need to do is modify the upper bound `TESTVALUE` and modify the `alpha`.
+For the "clinical MBI" approach let's change the alpha for the MET (non-inferiority: .005 and MET: .2). 
+
+```
+/*Clinical MBI */
+title "Clinical MBI: ToothGrowth";
+PROC MIXED data=tooth;
+class supp dose;
+model len = supp|dose;
+lsmeans supp*dose / CL;  /*Gets all the means and CI for each condition*/
+lsmestimate supp*dose
+"OJ vs VC @ 0.5 mg dose" [-1, 1 3] [1, 2 3],
+"OJ vs VC @ 1 mg dose" [-1, 1 1] [1, 2 1],
+"OJ vs VC @ 2 mg dose" [-1, 1 2] [1, 2 2]
+/ TESTVALUE=-1 CL UPPER alpha=.005;
+lsmestimate supp*dose
+"OJ vs VC @ 0.5 mg dose" [-1, 1 3] [1, 2 3],
+"OJ vs VC @ 1 mg dose" [-1, 1 1] [1, 2 1],
+"OJ vs VC @ 2 mg dose" [-1, 1 2] [1, 2 2]
+/ TESTVALUE=1 CL UPPER alpha=.2;
+run;
+quit;
+
+```
+
+For simplicity, let's just compare the delivery methods at each dosage.
+
+![Figure 3. LSMESTIMATE Results for Equivalence Testing on Tooth Data.](/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/Clin_Eq_Tooth.PNG)
+
+
+In this case, VC fails to adequately demonstrate non-inferiority.
+
+Conclusion: **Do not use VC at any dosage as it does not demonstrate adequate non-inferiority to OJ, and failed to provide any evidence of having a meaningful positive effect.**
+
+# Writing your Methods 
+
+One of the more frustrating problems I noticed with research reporting MBI in the past was the lack of detail in their methods sections about the statistical methods they utilized. 
+Frankly this is a problem in most sport and exercise science manuscripts, not just those that utilized MBI.
+Therefore, I have created a short list of items that should always be included if you are using this approach.
+
+1. **Note what types of hypotheses you are testing.**
+  - If you are using the "mechanistic" approach: note that you are simply performing an equivalence/MET test
+  - If you are using the "clincal" approach: note that you are using a non-inferiority test **and** a minimal effects test
+2. **State the alpha level(s)**
+  - Even if you are using the "compatibility" bounds outlined by @Aisbett2020 you should directly state the alpha levels for used within your manuscript.
+  - Justifying your alpha can be difficult and should be done *a priori*. Most likely, this can be accomplished when you are planning your sample size for data collection by balancing your type 1 and type 2 error using a compromise power analysis.
+    - There are blog posts from [minitab](https://blog.minitab.com/blog/understanding-statistics/which-statistical-error-is-worse-type-1-or-type-2) and [Lakens](http://daniellakens.blogspot.com/2019/05/justifying-your-alpha-by-minimizing-or.html) that may be helpful here.
+3. **State your smallest effect size(s) of interest (SESOI)**
+  - In most cases of MBI users have defaulted to a difference of 0.2 standard deviations (Cohen's d = 0.2)
+  - I would encourage researchers to have justification for their SESOI whether based on practitioner preferences (e.g., "coaches have stated an interest in an effect of X magnitude") or based on empirical evidence. 
+    -For empirical justifications, I suggest reading the DETLA2 guidelines [@cook2018].
+4. **Note and cite what statistical software and programs you used to analyze the data.**
+  - Try to be specific and include version number
+    - This is important because as the software is updated some calculations may change.
+
+# Concluding Remarks
+
+Any researcher is capable of performing the appropriate equivalence, MET, and non-inferiority tests in R or SAS. As I have documented, making a "magnitude based inference" is fairly simple and straight forward procedure when it is viewed through these lenses. All of these approaches (equivalence, MET, and non-inferiority tests) in the scenarios I have outlined are special cases of a one-tailed *t*-test. Researchers who would like to adopt this approach should read the work by @Aisbett2020 to ensure they fully understand the statistical framework. Both Batterham & Hopkins, the creators of MBI, should be also commended for moving the conversation surrounding statistical inference in sport science from a focus on "nil hypotheses" to a focus on the magnitude of the effect size. However, I would strongly encourage all sports scientists that have used magnitude based inference in the past to adopt this straightforward frequentist approach or adopt a fully Bayesian approach to inference [@vanRavenzwaaij2019].
+
+# Questions?
+
+If you have any questions, please feel free to [contact me](https://aaroncaldwell.us/).
+
+# References
+
