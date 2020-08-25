@@ -9,7 +9,7 @@ title = "Superpower R package"
 summary = "R package for developed for power analysis with Daniel Lakens"
 
 # Optional image to display on homepage (relative to static/img/ folder).
-image_preview = "superpower-square.jpg"
+image_preview = "Superpower2.PNG"
 
 # Tags: can be used for filtering projects.
 # Example: tags = ["machine-learning", "deep-learning"]
