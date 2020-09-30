@@ -66,7 +66,7 @@ user_groups:
 - Visitors
 ---
 
-Aaron is an exercise physiologist by training with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. His current job is focused on human performance in extreme environments (heat, cold, and altitude). In addition, he has expanded his skillset to include applied statistics by completing a Graudate Certificate in Statistics & Research Methods while at the University of Arkansas and is currently continuing his education with a M.Sc. in Analytics through the Georgia Institute of Technology.
+Aaron is an exercise physiologist by training with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. His current job is focused on human performance in extreme environments (heat, cold, and altitude). In addition, he has expanded his skillset to include applied statistics by completing a Graduate Certificate in Statistics & Research Methods while at the University of Arkansas and is currently continuing his education with a M.Sc. in Analytics through the Georgia Institute of Technology.
 
 Aaron's statistics and coding work can be found on [GitHub](https://github.com/arcaldwell49)
 
