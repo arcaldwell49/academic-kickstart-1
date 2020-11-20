@@ -1,0 +1,403 @@
+---
+title: Increasing testing severity in multi-group designs
+author: Aaron R. Caldwell
+date: 'Last Updated: `r Sys.Date()`'
+slug: severity-multigroup
+categories:
+  - R
+  - statistics
+tags:
+  - R
+  - statistics
+  - hypothesis testing
+  - polynomial
+  - contrasts
+  - emmeans
+subtitle: ''
+summary: ''
+authors: []
+lastmod: '2020-11-20T07:40:07-05:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+editor_options: 
+  chunk_output_type: console
+---
+
+# Introduction
+
+A little over a year ago an acquaintance of mine, Patrick Forscher, wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:
+
+> Multi-group designs are the workhorse of scientific psychology.  Multi-group designs apply to any grouping of people, within-person states, situations, or stimuli; interest typically centers around the either the means or conditional means within each group.  However, theory-testing using these means typically proceeds in just the way that Meehl criticized: scientists attempt to reject a null hypothesis of no group mean differences (which, due to Meehl's "crud", may be trivially false a priori), then follow up the rejected null hypothesis with tests intended to diagnose the pattern that produced the rejected null.
+
+I agree that this is systemic problem. People sometimes default to just plugging numbers into a one-way ANOVA and usually conclude that their hypothesis is confirmed simply by a significant ANOVA-level effect. Patrick's proposed solution to the problem is *a priori* orthogonal contrasts. As a quick aside, I am always shocked at how few people know about orthogonal contrasts. This was drilled into my head by my statistics professors at Arkansas (thank you Ronna Turner and Sean Mulvenon!). For more details on orthogonal contrasts (and experimental design altogether), I highly recommend purchasing a copy of ["Designing Experiments and Analyzing Data"](https://designingexperiments.com/) by Maxwell, Delaney, and Kelley (2018). It covers this and numerous other topics; you won't find a better value in a statistics textbook.
+
+# R Code
+
+Now I will go through the code in R for how to implement Patrick's approach using the `afex` and `emmeans` package. For more details on *why* you should use this approach please read Patrick's [blogpost](http://persistentastonishment.blogspot.com/2019/02/increasing-testing-severity-in-multi.html)!
+
+## Orthogonal Contrasts
+
+There are many helper functions in R that make it easy to use orthogonal contrasts without having to write out the contrasts by hand. I will show these later but I quickly want to show a technique for checking your set of contrasts to ensure they are in fact orthogonal. Essentially, I have a function that takes the contrasts as matrix and calculates the cross-products of the matrix. If any off-diagonal element is not equal to zero then the contrasts are not orthogonal. Please note, that I made this function in ~2 minutes so I haven't quite checked to ensure it works in all situations.
+
+```{r orthogcheck}
+# build function
+check_orthog = function(contrast_mat) {
+  check_off = crossprod(contrast_mat)
+  upper_check = sum(check_off*upper.tri(check_off))
+  lower_check = sum(check_off*lower.tri(check_off))
+  if (upper_check == 0 && lower_check == 0) {
+    return(TRUE)
+  } else{
+    return(FALSE)
+  }
+}
+
+# Test with Patrick's code -- should print TRUE
+
+c1 <- c(-1/2,0,1/2)
+c2 <- c(1/3,-2/3,1/3)
+
+cons = cbind(c1,c2)
+
+check_orthog(cons)
+
+# Create non-orthogonal contrasts -- should print FALSE
+cons2 = cbind(c(-1,1,0),
+              c(0,-1,1),
+              c(-1,0,1))
+
+check_orthog(cons2)
+
+# Another way of coding orthogonal polynomial contrasts. 
+c1 <- c(-1, 0, 1)
+c2 <- c(0.5, -1, 0.5)
+
+cons3 <- cbind(c1,c2)
+
+# Again should print TRUE
+check_orthog(cons3)
+
+```
+
+I will use this at points in the blogpost just to check my own contrast coding (please email me if you notice a mistake!).
+
+## Generate Data 
+
+First, I will generate some data. Please note for this portion of the post I will be directly replicating/copying Patrick's [data and code](https://gist.github.com/schnarrd/f9b217a4eac09f3729d4e2011e04391d).
+
+```{r step1, warning=FALSE,message=FALSE}
+library(tidyverse)
+library(afex)
+library(emmeans)
+library(broom)
+
+set.seed(432432) # For reproducibility
+
+# For all examples, I'm using the below sampling error sd and n per cell
+err <- 1
+n_per_cell <- 200
+# I'm also assuming the following:
+# (1) our smallest effect of substantive interest is .4
+# (2) all contrasts are Helment (successively compare one group to the average of the others)
+# (3) all contrasts are unit-weighted
+
+# This method should generalize to other orthogonal contrasts
+# The parameter estimates for unit-weighted Helmert contrasts, however, have a 
+# nice interpretation as a series of mean differences and are therefore easy to understand
+
+
+#### THREE GROUP ####
+
+# Ceofficients for this case. Modify as desired
+# First is the intercept, second is the focal contrast, remainder are the residual contrasts
+coefs <- c(0, .7, .2)
+
+# Create the data
+# The last line creates the outcome using the coefficients above and the desired sampling error, err
+# %*% is matrix multiplication
+dat_three <- data.frame(group = rep(paste("group", 1:3), n_per_cell))
+dat_three <- mutate(
+  dat_three,
+  c1 = case_when(group == "group 1" ~ 2 / 3, TRUE ~ -1 /
+                   3),
+  c2 = case_when(group == "group 1" ~ 0, group == "group 2" ~ 1 /
+                   2, TRUE ~ -1 / 2),
+  outcome = as.vector(cbind(1, c1, c2) %*% coefs + rnorm(nrow(dat_three), sd =
+                                                           err))
+) %>%
+  mutate(group = factor(group,
+                        levels = c("group 1",
+                                   "group 2",
+                                   "group 3"),
+                        ordered = TRUE)) # creates and ordered & labeled factor for group
+
+
+knitr::kable(head(dat_three),
+             caption = "3-group data")
+
+```
+
+Now, we have some data to work. Howerver, than simply using the `lm` function to make the contrast comparisons I will use `afex` to build the model and then `emmeans` to make the specific contrasts.
+
+## Three Group Example
+
+In Patrick's post he used the `lm` function to test the contrasts. I think this fine but may be difficult to understand for many beginners. Plus any addition comparisons will have to be made by creating a new model. This is why I prefer using `afex`: it is an easier to use interface and the model can be passed onto `emmeans` for specific additional comparisons. If this approach works for you that is great, but I want to make sure people know of alternative approaches.
+
+```{r}
+# Patrick's Example
+m_three <- lm(outcome ~ c1 + c2, data=dat_three)
+knitr::kable(tidy(m_three),
+             caption = "3-group Contrasts using lm")
+```
+
+Now, let us go through the same process with `afex` and `emmeans`. We will need to create an `id` column so that `afex` knows that these are all between-subject comparisons. I also like to have the partial eta squared ($\eta^2$) for the default effect size output so I am also going to set this using the `afex_options` function.
+
+```{r}
+# Add subject id
+dat_three = rowid_to_column(dat_three, var = "id")
+afex_options(es_aov = "pes")
+```
+```{r}
+# Build model using afex; note we must have an error term "(1|id)"
+afex_three = afex::aov_4(outcome ~ group + (1|id),
+                         data = dat_three)
+# Output tyical ANOVA table with type-3 SS
+knitr::kable(nice(afex_three))
+```
+
+Most people reading this should be familiar with the table above. It is a simple one-way ANOVA output. This is what Patrick refers to as the "residual contrast" test in his own post.
+
+Now, I can make the same comparisons Patrick made with `lm` using `emmeans`. However, I can also make my tests direction using the `side` argument in the `contrast` function.
+
+```{r threegroupemm}
+
+# Now get emmeans
+emm_three = emmeans(afex_three, ~group)
+
+# Estimated marginal means
+knitr::kable(tidy(emm_three) %>%
+               select(-df,-statistic,-p.value))
+
+# Create orthogonal contrasts
+con_three = list(c1 = c(1,-.5,-.5),
+                 c2 = c(0,1,-1))
+check_orthog(cbind(con_three$c1,
+                   con_three$c2))
+# Make comparisons with contrast function
+knitr::kable(contrast(emm_three,con_three),
+             caption = "3-group emmeans contrasts")
+knitr::kable(contrast(emm_three,con_three,side = ">"),
+             caption = "3-group emmeans w/ directional contrasts")
+```
+
+Patrick also mentions that we would want to perform equivalence tests to rule out that the differences are within our equivalence bounds (answers the question "Are these contrast differences, if they exist, smaller than what we consider meaningful?"). Remember, `c1` is "group 1 - group 2 & group 3" and c2 is "group 2 - group 3".
+
+```{r threegroupequ}
+# Create contrast
+con_three_eq = contrast(emm_three,con_three) 
+# Perform equivalence test (takes absolute difference)
+test_three_eq = test(con_three_eq,
+                     delta = .4, # eq bound
+                     side = "equivalence")
+knitr::kable(test_three_eq,
+             caption = "Equivalence Tests for 3-group example")
+```
+
+## Four Group Example
+
+Again, we will need to generate the same data that Patrick did in his post.
+
+```{r}
+#### FOUR GROUP ####
+
+# Ceofficients for this case. Modify as desired
+# First is the intercept, second is the focal contrast, remainder are the residual contrasts
+coefs <- c(0, .7, .2, .1)
+
+# Create the data
+# The last line creates the outcome using the coefficients above and the desired sampling error, err
+# %*% is matrix multiplication
+dat_four <- data.frame(group = rep(paste("group", 1:4), n_per_cell))
+dat_four <- mutate(
+  dat_four,
+  c1 = case_when(group == "group 1" ~ -3 / 4, TRUE ~ 1 /
+                   4),
+  c2 = case_when(group == "group 1" ~ 0, group == "group 2" ~ 2 /
+                   3, TRUE ~ -1 / 3),
+  c3 = case_when(
+    group %in% c("group 1", "group 2") ~ 0,
+    group == "group 3" ~ 1 / 2,
+    TRUE ~ -1 / 2
+  ),
+  outcome = as.vector(cbind(1, c1, c2, c3) %*% coefs + rnorm(nrow(dat_four), sd =
+                                                               err))
+) %>%
+  mutate(group = factor(
+    group,
+    levels = c("group 1",
+               "group 2",
+               "group 3",
+               "group 4"),
+    ordered = TRUE
+  )) %>% # creates and ordered & labeled factor for group
+rowid_to_column(var = "id")
+
+knitr::kable(head(dat_four),
+             caption = "4-Groups Data")
+```
+
+Now, we replicate the process to build our base model.
+
+```{r}
+# Build model using afex; note we must have an error term "(1|id)"
+afex_four = afex::aov_4(outcome ~ group + (1|id),
+                         data = dat_four)
+# Output tyical ANOVA table with type-3 SS
+knitr::kable(nice(afex_four),
+             caption = "ANOVA: Four Groups")
+```
+
+And, we can then pass on this model to the `emmeans` function to make our specific contrasts.
+
+```{r fourgroupemm}
+# Now get emmeans
+emm_four = emmeans(afex_four, ~group,
+                   adjust = "none")
+
+# Estimated marginal means
+knitr::kable(tidy(emm_four) %>%
+               select(-df,-statistic,-p.value))
+
+# Create orthogonal contrasts
+con_four = list(c1 = c(1,-1/3,-1/3,-1/3),
+                c2 = c(0,1,-0.5,-0.5),
+                c3 = c(0,0,.5,-.5))
+check_orthog(cbind(con_four$c1,
+                   con_four$c2,
+                   con_four$c3))
+# Perform joint test
+knitr::kable(test(contrast(emm_four,
+                           con_four[2:3]),
+                  joint = TRUE),
+             caption = "Joint Test of Residual Contrasts")
+
+
+```
+
+We start by performing "joint test" of the residual hypotheses (Note: `c1` is the focal hypothesis so we only include `c2` and `c3`). Now, we observed that our residual contrasts actually account for a significant portion of the variance.
+
+So, we can perform equivalence testing for these contrasts. We find that `c2` and `c3` are within our equivalence bounds.
+```{r}
+# Make comparisons with contrast function
+knitr::kable(test(contrast(emm_four,
+                           con_four),
+                  delta = .4,
+                  side = "equivalence"),
+             caption = "4-group equivalence contrasts")
+
+```
+
+Then, we can finally test focal hypothesis `c1`.
+```{r}
+knitr::kable(tidy(contrast(emm_four,con_four[1])),
+             caption = "4-group: c1 contrast")
+```
+
+From these results Patrick concludes the following (and I agree).
+
+>In this case, although the deviation from the focal contrast is significantly different from zero, we can say that the amount of deviation is smaller than our threshold for what constitutes a meaningful effect.  If we think that any deviation from the focal contrast is reason for concern, we might think about amending our theory.  If, on the other hand, we believe that the null hypothesis of no relationship is basically always false and that many of these non-zero relationships are "crud", we might advance the claim that our theory has been corroborated.  In either case our testing procedure is more severe than a mere test of the null hypothesis of no differences between group means.
+
+Another way of saying this is the following: despite the data being incompatibility with the focal contrast (evidenced by the joint test), the differences observed in these other contrasts is small or within the established equivalence bounds. Meanwhile, we can reject the null hypothesis that our focal contrast is zero.
+
+# Extension to Multilevel/Hierarchical Models
+
+In many cases, the designs that Patrick laid out are as simple or clean as a 3-group one-way ANOVA. Very often we have multiple levels of variance we would like to take into account. The most common example, and one I will repeat here, is in education wherein we have students inside classes within schools. In addition, we often have covariates that (like gender, socioecononimc status, or age) and we need to include those in our models.
+
+So, I will apply Patrick's approach to a study where we have test scores on students within classes within schools. We also have informative covariates such as age and gender on the test scores. Let us say we are testing the hypothesis that our intended treatments (groups 2 and 3) will have a positive effect, *and* there will be an additional benefit for treatment group 3. Therefore, we will have similar contrasts to the original 3-group example except we will reverse the coding *and* only have one-sided tests because I specified directional hypotheses.
+
+```{r}
+library(simstudy)
+# taken from https://kgoldfeld.github.io/simstudy/articles/clustered.html
+gen.school <- defData(varname = "s0", dist = "normal", formula = 0, variance = 3, 
+                      id = "idSchool")
+gen.school <- defData(gen.school, varname = "nClasses", dist = "noZeroPoisson", formula = 3)
+
+set.seed(282721)
+
+dtSchool <- genData(8, gen.school)
+dtSchool <- trtAssign(dtSchool, nTrt = 3)
+
+gen.class <- defDataAdd(varname = "c0", dist = "normal", formula = 0, variance = 2)
+gen.class <- defDataAdd(gen.class, varname = "nStudents", dist = "noZeroPoisson", 
+                        formula = 20)
+
+dtClass <- genCluster(dtSchool, "idSchool", numIndsVar = "nClasses", level1ID = "idClass")
+dtClass <- addColumns(gen.class, dtClass) %>%
+  mutate(t2 = ifelse(trtGrp == 2,1,0),
+         t3 = ifelse(trtGrp == 3,1,0))
+  
+
+gen.student <- defDataAdd(varname = "Male", dist = "binary", 
+                          formula = 0.5)
+gen.student <- defDataAdd(gen.student, varname = "age", dist = "uniform", 
+                          formula = "9.5; 10.5")
+gen.student <- defDataAdd(gen.student, varname = "test", dist = "normal", 
+                          formula = "50 - 2*Male + s0 + c0 + 4 * t2 + 12 * t3", variance = 2)
+dtStudent <- genCluster(dtClass, cLevelVar = "idClass", numIndsVar = "nStudents", 
+                        level1ID = "idChild")
+
+con_three = list(c1 = c(-1,.5,.5),
+                 c2 = c(0,1,-1))
+check_orthog(cbind(con_three$c1,
+                   con_three$c2))
+
+dat_mlm <- addColumns(gen.student, dtStudent) %>%
+  select(-s0,-c0,-t2,-t3) %>%
+  mutate(trtGrp = factor(trtGrp,
+                         levels = c(1,2,3),
+                         ordered = TRUE))
+```
+
+Now we can utilize the `lme4` package to build the mlm.
+
+```{r}
+test_mlm = lme4::lmer(test ~ Male + trtGrp + (1|idClass:idSchool) + (1|idSchool),
+                      data = dat_mlm)
+knitr::kable(broom.mixed::tidy(test_mlm),
+             caption = "Summary Table of MLM")
+# Plot estimated differences between treatments
+emm_mlm = emmeans(test_mlm, ~ trtGrp)
+plot(emm_mlm)
+```
+
+Finally, we can apply `emmeans` to look at the our specific contrasts. For these multi-level models `emmeans` defaults to Kenword-Roger degrees of freedom.
+
+```{r}
+con_mlm = list(c1 = c(-1,.5,.5),
+                 c2 = c(0,-1,1))
+check_orthog(cbind(con_mlm$c1,
+                   con_mlm$c2))
+knitr::kable(test(contrast(emm_mlm, con_mlm),
+                  side = ">"))
+```
+
+We see that our data is incompatible with the null hypotheses. We may also want to include ["conditional equivalence tests"](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5898747/) to ensure that our effects are not within a range we deem practically equivalent. Therefore, we can use almost the same code as the chunk above but add a `delta` argument as well as change the `side` argument to "equivalent".
+
+```{r}
+knitr::kable(test(contrast(emm_mlm, con_mlm),
+                  delta = 2,
+                  side = "equivalent"))
+```
+
+# Conclusion
+
+As you can see the process of creating specific contrasts is fairly straightforward in R and the hypothesis testing procedures are simplified by using the `emmeans` package.
+
+## Miscellaneous Notes
+
+There are other ways to code contrasts. This post by Rose Maier notes a way of performing contrasts with the `summary` function.
+https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html
