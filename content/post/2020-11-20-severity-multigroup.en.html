@@ -1,7 +1,7 @@
 ---
 title: Increasing testing severity in multi-group designs
 author: Aaron R. Caldwell
-date: 'Last Updated: 2020-11-20'
+date: 'Last Updated: 2020-12-03'
 slug: severity-multigroup
 categories:
   - R
@@ -31,11 +31,11 @@ editor_options:
 
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>A little over a year ago an acquaintance of mine, Patrick Forscher, wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:</p>
+<p>A little over a year ago Patrick Forscher wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:</p>
 <blockquote>
 <p>Multi-group designs are the workhorse of scientific psychology. Multi-group designs apply to any grouping of people, within-person states, situations, or stimuli; interest typically centers around the either the means or conditional means within each group. However, theory-testing using these means typically proceeds in just the way that Meehl criticized: scientists attempt to reject a null hypothesis of no group mean differences (which, due to Meehl’s “crud”, may be trivially false a priori), then follow up the rejected null hypothesis with tests intended to diagnose the pattern that produced the rejected null.</p>
 </blockquote>
-<p>I agree that this is systemic problem. People sometimes default to just plugging numbers into a one-way ANOVA and usually conclude that their hypothesis is confirmed simply by a significant ANOVA-level effect. Patrick’s proposed solution to the problem is <em>a priori</em> orthogonal contrasts. As a quick aside, I am always shocked at how few people know about orthogonal contrasts. This was drilled into my head by my statistics professors at Arkansas (thank you Ronna Turner and Sean Mulvenon!). For more details on orthogonal contrasts (and experimental design altogether), I highly recommend purchasing a copy of <a href="https://designingexperiments.com/">“Designing Experiments and Analyzing Data”</a> by Maxwell, Delaney, and Kelley (2018). It covers this and numerous other topics; you won’t find a better value in a statistics textbook.</p>
+<p>I agree that this is systemic problem. People sometimes default to just plugging numbers into a one-way ANOVA and usually conclude that their hypothesis is confirmed simply by a significant ANOVA-level effect. Patrick’s proposed solution to the problem is <em>a priori</em> orthogonal contrasts. As a quick aside, I am always shocked at how few people know about orthogonal contrasts. This was drilled into my head by my statistics professors at Arkansas (Thank you Ronna Turner and Sean Mulvenon!). For more details on orthogonal contrasts (and experimental design altogether), I highly recommend purchasing a copy of <a href="https://designingexperiments.com/">“Designing Experiments and Analyzing Data”</a> by Maxwell, Delaney, and Kelley (2018). It covers this and numerous other topics; you won’t find a better value in a statistics textbook.</p>
 </div>
 <div id="r-code" class="section level1">
 <h1>R Code</h1>
