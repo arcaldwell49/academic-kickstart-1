@@ -182,11 +182,11 @@ knitr::kable(head(dat_three),
 </tr>
 </tbody>
 </table>
-<p>Now, we have some data to work. Howerver, than simply using the <code>lm</code> function to make the contrast comparisons I will use <code>afex</code> to build the model and then <code>emmeans</code> to make the specific contrasts.</p>
+<p>Now, we have some data to work with. However, rather than simply using the <code>lm</code> function to make the contrast comparisons I will use <code>afex</code> to build the model and then <code>emmeans</code> to apply the specific contrasts.</p>
 </div>
 <div id="three-group-example" class="section level2">
 <h2>Three Group Example</h2>
-<p>In Patrick’s post he used the <code>lm</code> function to test the contrasts. I think this fine but may be difficult to understand for many beginners. Plus any addition comparisons will have to be made by creating a new model. This is why I prefer using <code>afex</code>: it is an easier to use interface and the model can be passed onto <code>emmeans</code> for specific additional comparisons. If this approach works for you that is great, but I want to make sure people know of alternative approaches.</p>
+<p>In Patrick’s post he used the <code>lm</code> function to test the contrasts. I think this fine but may be difficult to understand for many beginners. Plus any addition comparisons will have to be made by creating a new model. This is why I prefer using <code>afex</code>: it has an easier to use interface and the model can be passed onto <code>emmeans</code> for specific additional comparisons. If Patrick’s approach works for you that is great, but I want to make sure people know of alternative approaches.</p>
 <pre class="r"><code># Patrick&#39;s Example
 m_three &lt;- lm(outcome ~ c1 + c2, data=dat_three)
 knitr::kable(tidy(m_three),
@@ -258,8 +258,8 @@ knitr::kable(nice(afex_three))</code></pre>
 </tr>
 </tbody>
 </table>
-<p>Most people reading this should be familiar with the table above. It is a simple one-way ANOVA output. This is what Patrick refers to as the “residual contrast” test in his own post.</p>
-<p>Now, I can make the same comparisons Patrick made with <code>lm</code> using <code>emmeans</code>. However, I can also make my tests direction using the <code>side</code> argument in the <code>contrast</code> function.</p>
+<p>Most people reading this should be familiar with the table above. It is a simple one-way ANOVA output.</p>
+<p>Now I can make the same comparisons Patrick made with <code>lm</code> using <code>emmeans</code>. However, I can also make my tests directionl using the <code>side</code> argument in the <code>contrast</code> function.</p>
 <pre class="r"><code># Now get emmeans
 emm_three = emmeans(afex_three, ~group)
 
@@ -332,7 +332,8 @@ knitr::kable(contrast(emm_three,con_three),
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>knitr::kable(contrast(emm_three,con_three,side = &quot;&gt;&quot;),
+<pre class="r"><code>knitr::kable(contrast(emm_three,con_three,
+                      side = &quot;&gt;&quot;),
              caption = &quot;3-group emmeans w/ directional contrasts&quot;)</code></pre>
 <table>
 <caption><span id="tab:threegroupemm">Table 3: </span>3-group emmeans w/ directional contrasts</caption>
@@ -418,20 +419,25 @@ coefs &lt;- c(0, .7, .2, .1)
 # Create the data
 # The last line creates the outcome using the coefficients above and the desired sampling error, err
 # %*% is matrix multiplication
-dat_four &lt;- data.frame(group = rep(paste(&quot;group&quot;, 1:4), n_per_cell))
+dat_four &lt;- data.frame(group = rep(paste(&quot;group&quot;, 1:4), 
+                                   n_per_cell))
 dat_four &lt;- mutate(
   dat_four,
   c1 = case_when(group == &quot;group 1&quot; ~ -3 / 4, TRUE ~ 1 /
                    4),
-  c2 = case_when(group == &quot;group 1&quot; ~ 0, group == &quot;group 2&quot; ~ 2 /
+  c2 = case_when(group == &quot;group 1&quot; ~ 0, 
+                 group == &quot;group 2&quot; ~ 2 /
                    3, TRUE ~ -1 / 3),
   c3 = case_when(
     group %in% c(&quot;group 1&quot;, &quot;group 2&quot;) ~ 0,
     group == &quot;group 3&quot; ~ 1 / 2,
     TRUE ~ -1 / 2
   ),
-  outcome = as.vector(cbind(1, c1, c2, c3) %*% coefs + rnorm(nrow(dat_four), sd =
-                                                               err))
+  outcome = as.vector(cbind(1, 
+                            c1,
+                            c2, 
+                            c3) %*% coefs + rnorm(nrow(dat_four), 
+                                                  sd = err))
 ) %&gt;%
   mutate(group = factor(
     group,
@@ -700,33 +706,69 @@ knitr::kable(test(contrast(emm_four,
 <p>So, I will apply Patrick’s approach to a study where we have test scores on students within classes within schools. We also have informative covariates such as age and gender on the test scores. Let us say we are testing the hypothesis that our intended treatments (groups 2 and 3) will have a positive effect, <em>and</em> there will be an additional benefit for treatment group 3. Therefore, we will have similar contrasts to the original 3-group example except we will reverse the coding <em>and</em> only have one-sided tests because I specified directional hypotheses.</p>
 <pre class="r"><code>library(simstudy)
 # taken from https://kgoldfeld.github.io/simstudy/articles/clustered.html
-gen.school &lt;- defData(varname = &quot;s0&quot;, dist = &quot;normal&quot;, formula = 0, variance = 3, 
-                      id = &quot;idSchool&quot;)
-gen.school &lt;- defData(gen.school, varname = &quot;nClasses&quot;, dist = &quot;noZeroPoisson&quot;, formula = 3)
+gen.school &lt;- defData(
+  varname = &quot;s0&quot;,
+  dist = &quot;normal&quot;,
+  formula = 0,
+  variance = 3,
+  id = &quot;idSchool&quot;
+)
+gen.school &lt;- defData(gen.school,
+                      varname = &quot;nClasses&quot;,
+                      dist = &quot;noZeroPoisson&quot;,
+                      formula = 3)
 
 set.seed(282721)
 
 dtSchool &lt;- genData(8, gen.school)
 dtSchool &lt;- trtAssign(dtSchool, nTrt = 3)
 
-gen.class &lt;- defDataAdd(varname = &quot;c0&quot;, dist = &quot;normal&quot;, formula = 0, variance = 2)
-gen.class &lt;- defDataAdd(gen.class, varname = &quot;nStudents&quot;, dist = &quot;noZeroPoisson&quot;, 
-                        formula = 20)
+gen.class &lt;-
+  defDataAdd(
+    varname = &quot;c0&quot;,
+    dist = &quot;normal&quot;,
+    formula = 0,
+    variance = 2
+  )
+gen.class &lt;-
+  defDataAdd(gen.class,
+             varname = &quot;nStudents&quot;,
+             dist = &quot;noZeroPoisson&quot;,
+             formula = 20)
 
-dtClass &lt;- genCluster(dtSchool, &quot;idSchool&quot;, numIndsVar = &quot;nClasses&quot;, level1ID = &quot;idClass&quot;)
+dtClass &lt;-
+  genCluster(dtSchool,
+             &quot;idSchool&quot;,
+             numIndsVar = &quot;nClasses&quot;,
+             level1ID = &quot;idClass&quot;)
 dtClass &lt;- addColumns(gen.class, dtClass) %&gt;%
-  mutate(t2 = ifelse(trtGrp == 2,1,0),
-         t3 = ifelse(trtGrp == 3,1,0))
+  mutate(t2 = ifelse(trtGrp == 2, 1, 0),
+         t3 = ifelse(trtGrp == 3, 1, 0))
   
 
-gen.student &lt;- defDataAdd(varname = &quot;Male&quot;, dist = &quot;binary&quot;, 
+gen.student &lt;- defDataAdd(varname = &quot;Male&quot;,
+                          dist = &quot;binary&quot;,
                           formula = 0.5)
-gen.student &lt;- defDataAdd(gen.student, varname = &quot;age&quot;, dist = &quot;uniform&quot;, 
-                          formula = &quot;9.5; 10.5&quot;)
-gen.student &lt;- defDataAdd(gen.student, varname = &quot;test&quot;, dist = &quot;normal&quot;, 
-                          formula = &quot;50 - 2*Male + s0 + c0 + 4 * t2 + 12 * t3&quot;, variance = 2)
-dtStudent &lt;- genCluster(dtClass, cLevelVar = &quot;idClass&quot;, numIndsVar = &quot;nStudents&quot;, 
-                        level1ID = &quot;idChild&quot;)
+gen.student &lt;-
+  defDataAdd(gen.student,
+             varname = &quot;age&quot;,
+             dist = &quot;uniform&quot;,
+             formula = &quot;9.5; 10.5&quot;)
+gen.student &lt;-
+  defDataAdd(
+    gen.student,
+    varname = &quot;test&quot;,
+    dist = &quot;normal&quot;,
+    formula = &quot;50 - 2*Male + s0 + c0 + 4 * t2 + 12 * t3&quot;,
+    variance = 2
+  )
+dtStudent &lt;-
+  genCluster(
+    dtClass,
+    cLevelVar = &quot;idClass&quot;,
+    numIndsVar = &quot;nStudents&quot;,
+    level1ID = &quot;idChild&quot;
+  )
 
 con_three = list(c1 = c(-1,.5,.5),
                  c2 = c(0,1,-1))
@@ -738,7 +780,7 @@ check_orthog(cbind(con_three$c1,
   mutate(trtGrp = factor(trtGrp,
                          levels = c(1,2,3),
                          ordered = TRUE))</code></pre>
-<p>Now we can utilize the <code>lme4</code> package to build the mlm.</p>
+<p>Now we can utilize the <code>lme4</code> package to build the mlm and use <code>emmeans</code> plot function to take a glimpse at the difference between groups.</p>
 <pre class="r"><code>test_mlm = lme4::lmer(test ~ Male + trtGrp + (1|idClass:idSchool) + (1|idSchool),
                       data = dat_mlm)
 knitr::kable(broom.mixed::tidy(test_mlm),
@@ -896,7 +938,7 @@ check_orthog(cbind(con_mlm$c1,
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
-<p>As you can see the process of creating specific contrasts is fairly straightforward in R and the hypothesis testing procedures are simplified by using the <code>emmeans</code> package.</p>
+<p>As you can see the process of creating specific contrasts is fairly straightforward in R and the hypothesis testing procedures are simplified by using the <code>emmeans</code> package. I find contrast coding to be a refreshing alternative to the typical inspection of “ANOVA-level” effects that is often followed up pairwise comparisions between the levels of a factor where there is a significant effect. Instead, contrast coding demands that the user be specific in their hypotheses. As Patrick notes in his blog post, specifying these contrasts <em>a priori</em> in many cases may result in a more severe tests of your hypotheses which arguably increases the strength of your claims if your experiments support your hypotheses. In my opinion there is added advantage in how you can go about describign your results (no need for the mundane langauge about “significant main effects”). Also, orthogonal contrasts, by nature, do not require adjustments for multiplicity and therefore may be more statistical powerful than default ANOVA tests. I’ll admit that orthogonal contrasts are not a silver bullet (there is no free lunch in statistics), but I do believe there many experiments that would benefit from this type of analysis.</p>
 <div id="miscellaneous-notes" class="section level2">
 <h2>Miscellaneous Notes</h2>
 <p>There are other ways to code contrasts. This post by Rose Maier notes a way of performing contrasts with the <code>summary</code> function.
