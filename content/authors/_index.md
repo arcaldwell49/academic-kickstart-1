@@ -18,7 +18,7 @@ organizations:
   url: "https://www.usariem.army.mil/"
 
 # Short bio (displayed in user profile at end of posts)
-bio: My research interests are focused on human performance in extreme environments (heat, cold, and altitude), and applied statistics within health, sport, and exercise science.
+bio: Aaron is an exercise physiologist by training and also does some work as an applied statistician 
 
 interests:
 - Environmental & Exercise Physiology
@@ -66,7 +66,7 @@ user_groups:
 - Visitors
 ---
 
-Aaron is an exercise physiologist by training with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. His current job is focused on human performance in extreme environments (heat, cold, and altitude). In addition, he has expanded his skillset to include applied statistics by completing a Graduate Certificate in Statistics & Research Methods while at the University of Arkansas and is currently continuing his education with a M.Sc. in Analytics through the Georgia Institute of Technology.
+Aaron is an exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. He is currently as ORISE Postdoctoral Fellow at the United States Army Research Institute of Environmental Medicine where his current research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, Aaron works as an applied statistician.  He has gained expertise in statistics through a Graduate Certificate in Statistics & Research Methods program at the University of Arkansas, and is continuing his education with a M.Sc. in Analytics through the Georgia Institute of Technology.
 
 Aaron's statistics and coding work can be found on [GitHub](https://github.com/arcaldwell49)
 
