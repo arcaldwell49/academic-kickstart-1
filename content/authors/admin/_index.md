@@ -66,7 +66,7 @@ user_groups:
 - Visitors
 ---
 
-Aaron is an exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. He currently works as ORISE Postdoctoral Fellow at the United States Army Research Institute of Environmental Medicine where his research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, Aaron is a applied statistician.  He has gained expertise in statistics through a Graduate Certificate in Statistics & Research Methods program at the University of Arkansas, and is continuing his education with a M.Sc. in Analytics through the Georgia Institute of Technology.
+Aaron is an exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. He currently works as ORISE Postdoctoral Fellow at the United States Army Research Institute of Environmental Medicine where his research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, Aaron is a applied statistician.  He has gained expertise in statistics through a Graduate Certificate in Statistics & Research Methods program at the University of Arkansas and has published two R packages (`Superpower` and `mbir`) on CRAN.
 
 
 Aaron's statistics and coding work can be found on [GitHub](https://github.com/arcaldwell49)
