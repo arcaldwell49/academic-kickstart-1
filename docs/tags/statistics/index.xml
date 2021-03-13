@@ -1,0 +1,2263 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>statistics | Aaron Caldwell</title>
+    <link>https://aaroncaldwell.us/tags/statistics/</link>
+      <atom:link href="https://aaroncaldwell.us/tags/statistics/index.xml" rel="self" type="application/rss+xml" />
+    <description>statistics</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Fri, 20 Nov 2020 07:40:07 -0500</lastBuildDate>
+    <image>
+      <url>https://aaroncaldwell.us/media/logo.png</url>
+      <title>statistics</title>
+      <link>https://aaroncaldwell.us/tags/statistics/</link>
+    </image>
+    
+    <item>
+      <title>Increasing testing severity in multi-group designs</title>
+      <link>https://aaroncaldwell.us/post/severity-multigroup/</link>
+      <pubDate>Fri, 20 Nov 2020 07:40:07 -0500</pubDate>
+      <guid>https://aaroncaldwell.us/post/severity-multigroup/</guid>
+      <description>
+
+
+&lt;div id=&#34;introduction&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Introduction&lt;/h1&gt;
+&lt;p&gt;A little over a year ago Patrick Forscher wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Multi-group designs are the workhorse of scientific psychology. Multi-group designs apply to any grouping of people, within-person states, situations, or stimuli; interest typically centers around the either the means or conditional means within each group. However, theory-testing using these means typically proceeds in just the way that Meehl criticized: scientists attempt to reject a null hypothesis of no group mean differences (which, due to Meehl’s “crud”, may be trivially false a priori), then follow up the rejected null hypothesis with tests intended to diagnose the pattern that produced the rejected null.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;I agree that this is systemic problem. People sometimes default to just plugging numbers into a one-way ANOVA and usually conclude that their hypothesis is confirmed simply by a significant ANOVA-level effect. Patrick’s proposed solution to the problem is &lt;em&gt;a priori&lt;/em&gt; orthogonal contrasts. As a quick aside, I am always shocked at how few people know about orthogonal contrasts. This was drilled into my head by my statistics professors at Arkansas (Thank you Ronna Turner and Sean Mulvenon!). For more details on orthogonal contrasts (and experimental design altogether), I highly recommend purchasing a copy of &lt;a href=&#34;https://designingexperiments.com/&#34;&gt;“Designing Experiments and Analyzing Data”&lt;/a&gt; by Maxwell, Delaney, and Kelley (2018). It covers this and numerous other topics; you won’t find a better value in a statistics textbook.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;r-code&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;R Code&lt;/h1&gt;
+&lt;p&gt;Now I will go through the code in R for how to implement Patrick’s approach using the &lt;code&gt;afex&lt;/code&gt; and &lt;code&gt;emmeans&lt;/code&gt; package. For more details on &lt;em&gt;why&lt;/em&gt; you should use this approach please read Patrick’s &lt;a href=&#34;http://persistentastonishment.blogspot.com/2019/02/increasing-testing-severity-in-multi.html&#34;&gt;blogpost&lt;/a&gt;!&lt;/p&gt;
+&lt;div id=&#34;orthogonal-contrasts&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Orthogonal Contrasts&lt;/h2&gt;
+&lt;p&gt;There are many helper functions in R that make it easy to use orthogonal contrasts without having to write out the contrasts by hand. I will show these later but I quickly want to show a technique for checking your set of contrasts to ensure they are in fact orthogonal. Essentially, I have a function that takes the contrasts as matrix and calculates the cross-products of the matrix. If any off-diagonal element is not equal to zero then the contrasts are not orthogonal. Please note, that I made this function in ~2 minutes so I haven’t quite checked to ensure it works in all situations.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# build function
+check_orthog = function(contrast_mat) {
+  check_off = crossprod(contrast_mat)
+  upper_check = sum(check_off*upper.tri(check_off))
+  lower_check = sum(check_off*lower.tri(check_off))
+  if (upper_check == 0 &amp;amp;&amp;amp; lower_check == 0) {
+    return(TRUE)
+  } else{
+    return(FALSE)
+  }
+}
+
+# Test with Patrick&amp;#39;s code -- should print TRUE
+
+c1 &amp;lt;- c(-1/2,0,1/2)
+c2 &amp;lt;- c(1/3,-2/3,1/3)
+
+cons = cbind(c1,c2)
+
+check_orthog(cons)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create non-orthogonal contrasts -- should print FALSE
+cons2 = cbind(c(-1,1,0),
+              c(0,-1,1),
+              c(-1,0,1))
+
+check_orthog(cons2)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] FALSE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Another way of coding orthogonal polynomial contrasts. 
+c1 &amp;lt;- c(-1, 0, 1)
+c2 &amp;lt;- c(0.5, -1, 0.5)
+
+cons3 &amp;lt;- cbind(c1,c2)
+
+# Again should print TRUE
+check_orthog(cons3)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I will use this at points in the blogpost just to check my own contrast coding (please email me if you notice a mistake!).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;generate-data&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Generate Data&lt;/h2&gt;
+&lt;p&gt;First, I will generate some data. Please note for this portion of the post I will be directly replicating/copying Patrick’s &lt;a href=&#34;https://gist.github.com/schnarrd/f9b217a4eac09f3729d4e2011e04391d&#34;&gt;data and code&lt;/a&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+library(afex)
+library(emmeans)
+library(broom)
+
+set.seed(432432) # For reproducibility
+
+# For all examples, I&amp;#39;m using the below sampling error sd and n per cell
+err &amp;lt;- 1
+n_per_cell &amp;lt;- 200
+# I&amp;#39;m also assuming the following:
+# (1) our smallest effect of substantive interest is .4
+# (2) all contrasts are Helment (successively compare one group to the average of the others)
+# (3) all contrasts are unit-weighted
+
+# This method should generalize to other orthogonal contrasts
+# The parameter estimates for unit-weighted Helmert contrasts, however, have a 
+# nice interpretation as a series of mean differences and are therefore easy to understand
+
+
+#### THREE GROUP ####
+
+# Ceofficients for this case. Modify as desired
+# First is the intercept, second is the focal contrast, remainder are the residual contrasts
+coefs &amp;lt;- c(0, .7, .2)
+
+# Create the data
+# The last line creates the outcome using the coefficients above and the desired sampling error, err
+# %*% is matrix multiplication
+dat_three &amp;lt;- data.frame(group = rep(paste(&amp;quot;group&amp;quot;, 1:3), n_per_cell))
+dat_three &amp;lt;- mutate(
+  dat_three,
+  c1 = case_when(group == &amp;quot;group 1&amp;quot; ~ 2 / 3, TRUE ~ -1 /
+                   3),
+  c2 = case_when(group == &amp;quot;group 1&amp;quot; ~ 0, group == &amp;quot;group 2&amp;quot; ~ 1 /
+                   2, TRUE ~ -1 / 2),
+  outcome = as.vector(cbind(1, c1, c2) %*% coefs + rnorm(nrow(dat_three), sd =
+                                                           err))
+) %&amp;gt;%
+  mutate(group = factor(group,
+                        levels = c(&amp;quot;group 1&amp;quot;,
+                                   &amp;quot;group 2&amp;quot;,
+                                   &amp;quot;group 3&amp;quot;),
+                        ordered = TRUE)) # creates and ordered &amp;amp; labeled factor for group
+
+
+knitr::kable(head(dat_three),
+             caption = &amp;quot;3-group data&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:step1&#34;&gt;Table 1: &lt;/span&gt;3-group data&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c1&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c2&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;outcome&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6666667&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1940993&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5684096&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3451584&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6666667&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.4218414&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2550905&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.3534099&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now, we have some data to work with. However, rather than simply using the &lt;code&gt;lm&lt;/code&gt; function to make the contrast comparisons I will use &lt;code&gt;afex&lt;/code&gt; to build the model and then &lt;code&gt;emmeans&lt;/code&gt; to apply the specific contrasts.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;three-group-example&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Three Group Example&lt;/h2&gt;
+&lt;p&gt;In Patrick’s post he used the &lt;code&gt;lm&lt;/code&gt; function to test the contrasts. I think this fine but may be difficult to understand for many beginners. Plus any addition comparisons will have to be made by creating a new model. This is why I prefer using &lt;code&gt;afex&lt;/code&gt;: it has an easier to use interface and the model can be passed onto &lt;code&gt;emmeans&lt;/code&gt; for specific additional comparisons. If Patrick’s approach works for you that is great, but I want to make sure people know of alternative approaches.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Patrick&amp;#39;s Example
+m_three &amp;lt;- lm(outcome ~ c1 + c2, data=dat_three)
+knitr::kable(tidy(m_three),
+             caption = &amp;quot;3-group Contrasts using lm&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-1&#34;&gt;Table 2: &lt;/span&gt;3-group Contrasts using lm&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;term&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;statistic&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0437823&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0417829&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.047853&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2951303&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6570966&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0886348&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.413527&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1873883&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1023467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.830918&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0676111&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now, let us go through the same process with &lt;code&gt;afex&lt;/code&gt; and &lt;code&gt;emmeans&lt;/code&gt;. We will need to create an &lt;code&gt;id&lt;/code&gt; column so that &lt;code&gt;afex&lt;/code&gt; knows that these are all between-subject comparisons. I also like to have the partial eta squared (&lt;span class=&#34;math inline&#34;&gt;\(\eta^2\)&lt;/span&gt;) for the default effect size output so I am also going to set this using the &lt;code&gt;afex_options&lt;/code&gt; function.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Add subject id
+dat_three = rowid_to_column(dat_three, var = &amp;quot;id&amp;quot;)
+afex_options(es_aov = &amp;quot;pes&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Build model using afex; note we must have an error term &amp;quot;(1|id)&amp;quot;
+afex_three = afex::aov_4(outcome ~ group + (1|id),
+                         data = dat_three)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Contrasts set to contr.sum for the following variables: group&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Output tyical ANOVA table with type-3 SS
+knitr::kable(nice(afex_three))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;Effect&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;MSE&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;F&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;pes&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;2, 597&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1.05&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;29.16 ***&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;.089&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;&amp;lt;.001&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Most people reading this should be familiar with the table above. It is a simple one-way ANOVA output.&lt;/p&gt;
+&lt;p&gt;Now I can make the same comparisons Patrick made with &lt;code&gt;lm&lt;/code&gt; using &lt;code&gt;emmeans&lt;/code&gt;. However, I can also make my tests directionl using the &lt;code&gt;side&lt;/code&gt; argument in the &lt;code&gt;contrast&lt;/code&gt; function.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Now get emmeans
+emm_three = emmeans(afex_three, ~group)
+
+# Estimated marginal means
+knitr::kable(tidy(emm_three) %&amp;gt;%
+               select(-df,-statistic,-p.value))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.4818467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.07237&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.0815557&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.07237&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.2689441&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.07237&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create orthogonal contrasts
+con_three = list(c1 = c(1,-.5,-.5),
+                 c2 = c(0,1,-1))
+check_orthog(cbind(con_three$c1,
+                   con_three$c2))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Make comparisons with contrast function
+knitr::kable(contrast(emm_three,con_three),
+             caption = &amp;quot;3-group emmeans contrasts&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:threegroupemm&#34;&gt;Table 3: &lt;/span&gt;3-group emmeans contrasts&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6570966&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0886348&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.413527&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1873883&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1023467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.830918&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0676111&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;knitr::kable(contrast(emm_three,con_three,
+                      side = &amp;quot;&amp;gt;&amp;quot;),
+             caption = &amp;quot;3-group emmeans w/ directional contrasts&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:threegroupemm&#34;&gt;Table 3: &lt;/span&gt;3-group emmeans w/ directional contrasts&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6570966&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0886348&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.413527&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1873883&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1023467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.830918&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0338055&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Patrick also mentions that we would want to perform equivalence tests to rule out that the differences are within our equivalence bounds (answers the question “Are these contrast differences, if they exist, smaller than what we consider meaningful?”). Remember, &lt;code&gt;c1&lt;/code&gt; is “group 1 - group 2 &amp;amp; group 3” and c2 is “group 2 - group 3”.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create contrast
+con_three_eq = contrast(emm_three,con_three) 
+# Perform equivalence test (takes absolute difference)
+test_three_eq = test(con_three_eq,
+                     delta = .4, # eq bound
+                     side = &amp;quot;equivalence&amp;quot;)
+knitr::kable(test_three_eq,
+             caption = &amp;quot;Equivalence Tests for 3-group example&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:threegroupequ&#34;&gt;Table 4: &lt;/span&gt;Equivalence Tests for 3-group example&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6570966&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0886348&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.900628&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9980694&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1873883&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1023467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-2.077368&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0190973&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&#34;four-group-example&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Four Group Example&lt;/h2&gt;
+&lt;p&gt;Again, we will need to generate the same data that Patrick did in his post.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#### FOUR GROUP ####
+
+# Ceofficients for this case. Modify as desired
+# First is the intercept, second is the focal contrast, remainder are the residual contrasts
+coefs &amp;lt;- c(0, .7, .2, .1)
+
+# Create the data
+# The last line creates the outcome using the coefficients above and the desired sampling error, err
+# %*% is matrix multiplication
+dat_four &amp;lt;- data.frame(group = rep(paste(&amp;quot;group&amp;quot;, 1:4), 
+                                   n_per_cell))
+dat_four &amp;lt;- mutate(
+  dat_four,
+  c1 = case_when(group == &amp;quot;group 1&amp;quot; ~ -3 / 4, TRUE ~ 1 /
+                   4),
+  c2 = case_when(group == &amp;quot;group 1&amp;quot; ~ 0, 
+                 group == &amp;quot;group 2&amp;quot; ~ 2 /
+                   3, TRUE ~ -1 / 3),
+  c3 = case_when(
+    group %in% c(&amp;quot;group 1&amp;quot;, &amp;quot;group 2&amp;quot;) ~ 0,
+    group == &amp;quot;group 3&amp;quot; ~ 1 / 2,
+    TRUE ~ -1 / 2
+  ),
+  outcome = as.vector(cbind(1, 
+                            c1,
+                            c2, 
+                            c3) %*% coefs + rnorm(nrow(dat_four), 
+                                                  sd = err))
+) %&amp;gt;%
+  mutate(group = factor(
+    group,
+    levels = c(&amp;quot;group 1&amp;quot;,
+               &amp;quot;group 2&amp;quot;,
+               &amp;quot;group 3&amp;quot;,
+               &amp;quot;group 4&amp;quot;),
+    ordered = TRUE
+  )) %&amp;gt;% # creates and ordered &amp;amp; labeled factor for group
+rowid_to_column(var = &amp;quot;id&amp;quot;)
+
+knitr::kable(head(dat_four),
+             caption = &amp;quot;4-Groups Data&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-4&#34;&gt;Table 5: &lt;/span&gt;4-Groups Data&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;right&#34;&gt;id&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c1&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c2&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c3&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;outcome&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.75&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.6004404&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6666667&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.4770844&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.2156623&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;4&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 4&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.1881092&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.75&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.4617127&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;6&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6666667&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0611009&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now, we replicate the process to build our base model.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Build model using afex; note we must have an error term &amp;quot;(1|id)&amp;quot;
+afex_four = afex::aov_4(outcome ~ group + (1|id),
+                         data = dat_four)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Contrasts set to contr.sum for the following variables: group&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Output tyical ANOVA table with type-3 SS
+knitr::kable(nice(afex_four),
+             caption = &amp;quot;ANOVA: Four Groups&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-5&#34;&gt;Table 6: &lt;/span&gt;ANOVA: Four Groups&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;Effect&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;MSE&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;F&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;pes&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;3, 796&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1.02&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;25.52 ***&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;.088&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;&amp;lt;.001&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;And, we can then pass on this model to the &lt;code&gt;emmeans&lt;/code&gt; function to make our specific contrasts.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Now get emmeans
+emm_four = emmeans(afex_four, ~group,
+                   adjust = &amp;quot;none&amp;quot;)
+
+# Estimated marginal means
+knitr::kable(tidy(emm_four) %&amp;gt;%
+               select(-df,-statistic,-p.value))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5275826&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0714616&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.3089254&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0714616&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1323786&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0714616&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 4&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0253503&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0714616&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create orthogonal contrasts
+con_four = list(c1 = c(1,-1/3,-1/3,-1/3),
+                c2 = c(0,1,-0.5,-0.5),
+                c3 = c(0,0,.5,-.5))
+check_orthog(cbind(con_four$c1,
+                   con_four$c2,
+                   con_four$c3))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Perform joint test
+knitr::kable(test(contrast(emm_four,
+                           con_four[2:3]),
+                  joint = TRUE),
+             caption = &amp;quot;Joint Test of Residual Contrasts&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:fourgroupemm&#34;&gt;Table 7: &lt;/span&gt;Joint Test of Residual Contrasts&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;right&#34;&gt;df1&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df2&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;F.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;4.016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0183995&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;We start by performing “joint test” of the residual hypotheses (Note: &lt;code&gt;c1&lt;/code&gt; is the focal hypothesis so we only include &lt;code&gt;c2&lt;/code&gt; and &lt;code&gt;c3&lt;/code&gt;). Now, we observed that our residual contrasts actually account for a significant portion of the variance.&lt;/p&gt;
+&lt;p&gt;So, we can perform equivalence testing for these contrasts. We find that &lt;code&gt;c2&lt;/code&gt; and &lt;code&gt;c3&lt;/code&gt; are within our equivalence bounds.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Make comparisons with contrast function
+knitr::kable(test(contrast(emm_four,
+                           con_four),
+                  delta = .4,
+                  side = &amp;quot;equivalence&amp;quot;),
+             caption = &amp;quot;4-group equivalence contrasts&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-6&#34;&gt;Table 8: &lt;/span&gt;4-group equivalence contrasts&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.6831340&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0825167&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.431233&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9996841&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2300610&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0875222&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.941668&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0262649&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0535141&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0505310&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-6.856903&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Then, we can finally test focal hypothesis &lt;code&gt;c1&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;knitr::kable(tidy(contrast(emm_four,con_four[1])),
+             caption = &amp;quot;4-group: c1 contrast&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-7&#34;&gt;Table 9: &lt;/span&gt;4-group: c1 contrast&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;term&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null.value&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;statistic&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.683134&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0825167&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-8.278736&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;From these results Patrick concludes the following (and I agree).&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In this case, although the deviation from the focal contrast is significantly different from zero, we can say that the amount of deviation is smaller than our threshold for what constitutes a meaningful effect. If we think that any deviation from the focal contrast is reason for concern, we might think about amending our theory. If, on the other hand, we believe that the null hypothesis of no relationship is basically always false and that many of these non-zero relationships are “crud”, we might advance the claim that our theory has been corroborated. In either case our testing procedure is more severe than a mere test of the null hypothesis of no differences between group means.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Another way of saying this is the following: despite the data being incompatibility with the focal contrast (evidenced by the joint test), the differences observed in these other contrasts is small or within the established equivalence bounds. Meanwhile, we can reject the null hypothesis that our focal contrast is zero.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;extension-to-multilevelhierarchical-models&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Extension to Multilevel/Hierarchical Models&lt;/h1&gt;
+&lt;p&gt;In many cases, the designs that Patrick laid out are as simple or clean as a 3-group one-way ANOVA. Very often we have multiple levels of variance we would like to take into account. The most common example, and one I will repeat here, is in education wherein we have students inside classes within schools. In addition, we often have covariates that (like gender, socioecononimc status, or age) and we need to include those in our models.&lt;/p&gt;
+&lt;p&gt;So, I will apply Patrick’s approach to a study where we have test scores on students within classes within schools. We also have informative covariates such as age and gender on the test scores. Let us say we are testing the hypothesis that our intended treatments (groups 2 and 3) will have a positive effect, &lt;em&gt;and&lt;/em&gt; there will be an additional benefit for treatment group 3. Therefore, we will have similar contrasts to the original 3-group example except we will reverse the coding &lt;em&gt;and&lt;/em&gt; only have one-sided tests because I specified directional hypotheses.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(simstudy)
+# taken from https://kgoldfeld.github.io/simstudy/articles/clustered.html
+gen.school &amp;lt;- defData(
+  varname = &amp;quot;s0&amp;quot;,
+  dist = &amp;quot;normal&amp;quot;,
+  formula = 0,
+  variance = 3,
+  id = &amp;quot;idSchool&amp;quot;
+)
+gen.school &amp;lt;- defData(gen.school,
+                      varname = &amp;quot;nClasses&amp;quot;,
+                      dist = &amp;quot;noZeroPoisson&amp;quot;,
+                      formula = 3)
+
+set.seed(282721)
+
+dtSchool &amp;lt;- genData(8, gen.school)
+dtSchool &amp;lt;- trtAssign(dtSchool, nTrt = 3)
+
+gen.class &amp;lt;-
+  defDataAdd(
+    varname = &amp;quot;c0&amp;quot;,
+    dist = &amp;quot;normal&amp;quot;,
+    formula = 0,
+    variance = 2
+  )
+gen.class &amp;lt;-
+  defDataAdd(gen.class,
+             varname = &amp;quot;nStudents&amp;quot;,
+             dist = &amp;quot;noZeroPoisson&amp;quot;,
+             formula = 20)
+
+dtClass &amp;lt;-
+  genCluster(dtSchool,
+             &amp;quot;idSchool&amp;quot;,
+             numIndsVar = &amp;quot;nClasses&amp;quot;,
+             level1ID = &amp;quot;idClass&amp;quot;)
+dtClass &amp;lt;- addColumns(gen.class, dtClass) %&amp;gt;%
+  mutate(t2 = ifelse(trtGrp == 2, 1, 0),
+         t3 = ifelse(trtGrp == 3, 1, 0))
+  
+
+gen.student &amp;lt;- defDataAdd(varname = &amp;quot;Male&amp;quot;,
+                          dist = &amp;quot;binary&amp;quot;,
+                          formula = 0.5)
+gen.student &amp;lt;-
+  defDataAdd(gen.student,
+             varname = &amp;quot;age&amp;quot;,
+             dist = &amp;quot;uniform&amp;quot;,
+             formula = &amp;quot;9.5; 10.5&amp;quot;)
+gen.student &amp;lt;-
+  defDataAdd(
+    gen.student,
+    varname = &amp;quot;test&amp;quot;,
+    dist = &amp;quot;normal&amp;quot;,
+    formula = &amp;quot;50 - 2*Male + s0 + c0 + 4 * t2 + 12 * t3&amp;quot;,
+    variance = 2
+  )
+dtStudent &amp;lt;-
+  genCluster(
+    dtClass,
+    cLevelVar = &amp;quot;idClass&amp;quot;,
+    numIndsVar = &amp;quot;nStudents&amp;quot;,
+    level1ID = &amp;quot;idChild&amp;quot;
+  )
+
+con_three = list(c1 = c(-1,.5,.5),
+                 c2 = c(0,1,-1))
+check_orthog(cbind(con_three$c1,
+                   con_three$c2))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dat_mlm &amp;lt;- addColumns(gen.student, dtStudent) %&amp;gt;%
+  select(-s0,-c0,-t2,-t3) %&amp;gt;%
+  mutate(trtGrp = factor(trtGrp,
+                         levels = c(1,2,3),
+                         ordered = TRUE))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now we can utilize the &lt;code&gt;lme4&lt;/code&gt; package to build the mlm and use &lt;code&gt;emmeans&lt;/code&gt; plot function to take a glimpse at the difference between groups.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;test_mlm = lme4::lmer(test ~ Male + trtGrp + (1|idClass:idSchool) + (1|idSchool),
+                      data = dat_mlm)
+knitr::kable(broom.mixed::tidy(test_mlm),
+             caption = &amp;quot;Summary Table of MLM&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Registered S3 method overwritten by &amp;#39;broom.mixed&amp;#39;:
+##   method      from 
+##   tidy.gamlss broom&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-9&#34;&gt;Table 10: &lt;/span&gt;Summary Table of MLM&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;effect&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;term&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;statistic&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;fixed&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;55.9993351&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5561662&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;100.688138&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;fixed&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Male&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.7990154&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1491026&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-12.065621&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;fixed&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;trtGrp.L&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.6402443&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.7468733&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.229640&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;fixed&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;trtGrp.Q&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.0859008&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.1211914&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.860432&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;ran_pars&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;idClass:idSchool&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;sd__(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.4617520&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;ran_pars&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;idSchool&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;sd__(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9791225&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;ran_pars&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Residual&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;sd__Observation&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.5290580&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Plot estimated differences between treatments
+emm_mlm = emmeans(test_mlm, ~ trtGrp)
+plot(emm_mlm)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://aaroncaldwell.us/post/2020-11-20-severity-multigroup.en_files/figure-html/unnamed-chunk-9-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Finally, we can apply &lt;code&gt;emmeans&lt;/code&gt; to look at the our specific contrasts. For these multi-level models &lt;code&gt;emmeans&lt;/code&gt; defaults to Kenword-Roger degrees of freedom.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;con_mlm = list(c1 = c(-1,.5,.5),
+                 c2 = c(0,-1,1))
+check_orthog(cbind(con_mlm$c1,
+                   con_mlm$c2))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;knitr::kable(test(contrast(emm_mlm, con_mlm),
+                  side = &amp;quot;&amp;gt;&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.826355&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.030733&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5.934995&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.622817&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0002986&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.957165&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.489940&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.030437&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5.340594&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0001623&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;We see that our data is incompatible with the null hypotheses. We may also want to include &lt;a href=&#34;https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5898747/&#34;&gt;“conditional equivalence tests”&lt;/a&gt; to ensure that our effects are not within a range we deem practically equivalent. Therefore, we can use almost the same code as the chunk above but add a &lt;code&gt;delta&lt;/code&gt; argument as well as change the &lt;code&gt;side&lt;/code&gt; argument to “equivalent”.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;knitr::kable(test(contrast(emm_mlm, con_mlm),
+                  delta = 2,
+                  side = &amp;quot;equivalent&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.826355&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.030733&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5.934995&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;4.682450&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9982574&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.957165&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.489940&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.030437&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.998258&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9987449&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&#34;conclusion&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Conclusion&lt;/h1&gt;
+&lt;p&gt;As you can see the process of creating specific contrasts is fairly straightforward in R and the hypothesis testing procedures are simplified by using the &lt;code&gt;emmeans&lt;/code&gt; package. I find contrast coding to be a refreshing alternative to the typical inspection of “ANOVA-level” effects that is often followed up pairwise comparisions between the levels of a factor where there is a significant effect. Instead, contrast coding demands that the user be specific in their hypotheses. As Patrick notes in his blog post, specifying these contrasts &lt;em&gt;a priori&lt;/em&gt; in many cases may result in a more severe tests of your hypotheses which arguably increases the strength of your claims if your experiments support your hypotheses. In my opinion there is added advantage in how you can go about describign your results (no need for the mundane langauge about “significant main effects”). Also, orthogonal contrasts, by nature, do not require adjustments for multiplicity and therefore may be more statistical powerful than default ANOVA tests. I’ll admit that orthogonal contrasts are not a silver bullet (there is no free lunch in statistics), but I do believe there many experiments that would benefit from this type of analysis.&lt;/p&gt;
+&lt;div id=&#34;miscellaneous-notes&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Miscellaneous Notes&lt;/h2&gt;
+&lt;p&gt;There are other ways to code contrasts. This post by Rose Maier notes a way of performing contrasts with the &lt;code&gt;summary&lt;/code&gt; function.
+&lt;a href=&#34;https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html&#34; class=&#34;uri&#34;&gt;https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Magnitude Based Inference in R and SAS</title>
+      <link>https://aaroncaldwell.us/post/new-mbi/</link>
+      <pubDate>Mon, 04 May 2020 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/post/new-mbi/</guid>
+      <description>
+
+
+&lt;p&gt;Updated on: 2020-05-05&lt;/p&gt;
+&lt;div id=&#34;introduction&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Introduction&lt;/h1&gt;
+&lt;p&gt;There have been a number of criticisms of “magnitude-based inferences” &lt;span class=&#34;citation&#34;&gt;(Batterham and Hopkins 2006)&lt;/span&gt; which is a unique approach to statistics in the sport and exercise science community. As an author of the &lt;code&gt;mbir&lt;/code&gt; package &lt;span class=&#34;citation&#34;&gt;(Peterson and Caldwell 2019)&lt;/span&gt;, I have been watching this all develop closely. What is clear from the criticisms is that MBI has some fatal flaws directly related to the sample size estimations and the interpretations of the probabilities that the MBI spreadsheets provide &lt;span class=&#34;citation&#34;&gt;(Lohse et al. 2020; Sainani et al. 2019; Sainani 2018)&lt;/span&gt;. One of my motivations for helping make &lt;code&gt;mbir&lt;/code&gt; was to ensure there was version control of this technique, and that any changes to MBI would be well-documented. Now is the time for changes, and in this short post I will document how apply MBI in a frequentist hypothesis testing framework. The statistical reasoning behind this approach has been outlined in detail by &lt;span class=&#34;citation&#34;&gt;Aisbett, Lakens, and Sainani (2020)&lt;/span&gt;. I was lucky enough to provide feedback on an earlier version of this manuscript and it inspired me to write this blog post. Changes to &lt;code&gt;mbir&lt;/code&gt; will hopefully come soon once Kyle and I agree upon the appropriate path forward for the package (we may add Bayesian options as well). In this document, I will detail how to implement the approach of &lt;span class=&#34;citation&#34;&gt;Aisbett, Lakens, and Sainani (2020)&lt;/span&gt; in R and SAS. My hope is that with these details sport and exercise scientists can do three things: 1) go beyond relying entirely on ‘significance’, 2) avoid the pitfalls of the “old” MBI, and 3) apply analyses that have been well-documented in the statistics literature.&lt;/p&gt;
+&lt;div id=&#34;note-of-caution&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Note of caution&lt;/h2&gt;
+&lt;p&gt;This blog post implicitly assumes researchers are interested in &lt;em&gt;testing hypotheses&lt;/em&gt;.
+This is often not the case for many sport scientists.
+Researchers may simply want to &lt;em&gt;estimate&lt;/em&gt; the magnitude an effect, or may be using inferential statistics as descriptions of the data &lt;span class=&#34;citation&#34;&gt;(Chow and Greenland 2019; Greenland and Chow 2019; Amrhein, Trafimow, and Greenland 2019)&lt;/span&gt;.
+Personally, I have no problem with these approaches and would highly recommend the &lt;code&gt;concurve&lt;/code&gt; R package as a visualization tool if that is your intention &lt;span class=&#34;citation&#34;&gt;(Rafi and Vigotsky 2020)&lt;/span&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;the-basic-concepts&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;The Basic Concepts&lt;/h1&gt;
+&lt;p&gt;For those of you that have not read &lt;span class=&#34;citation&#34;&gt;Aisbett, Lakens, and Sainani (2020)&lt;/span&gt;, I will quickly detail what their approach entails. The primary point of their paper is that MBI can be described as combination of two one-sided tests (TOST) for equivalence testing and minimal effects tests (MET). The difference between this approach and the old MBI approach is that now researchers will have to establish an &lt;em&gt;a priori&lt;/em&gt; alpha-level, a smallest effect size of interest (SESOI), and justify their sample size on the basis of statistical power. In this format, we must explicitly test hypotheses and remove references to effects being “likely or very likely” or “unclear”, but rather state whether the data is “compatible, inconclusive, or ambiguous” depending on the result (See Table 6 of Aisbett, Lakens, &amp;amp; Sainani 2020). There are other more specific recommendations (such as the removal of the odds ratio calculations), and I highly recommend everyone read &lt;span class=&#34;citation&#34;&gt;Aisbett, Lakens, and Sainani (2020)&lt;/span&gt; for more details.&lt;/p&gt;
+&lt;div id=&#34;terminology&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Terminology&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Equivalence Testing&lt;/strong&gt; is a procedure designed to test whether an effect is contained within an equivalence bound. Many people may be familiar with equivalence testing from using TOST &lt;span class=&#34;citation&#34;&gt;(D. Lakens, Scheel, and Isager 2018a)&lt;/span&gt;. This establishes a null hypothesis that the effect is greater, or less, than the equivalence bound, and the alternative would be that the effect is within the equivalence bound.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Minimal Effects Testing&lt;/strong&gt; (MET) is a test to determine whether an effect is large enough to be considered meaningful. In contrast to equivalence testing, a null hypothesis in MET is that the effect is less than an minimal effects bound and the alternative would be that the effect is greater than the bound.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Non-Inferiority Testing&lt;/strong&gt; is a test of whether is &lt;em&gt;not worse&lt;/em&gt; than a inferiority margin. For example, this is commonly used in bio-pharmaceutical trials where a new, typically cheaper, drug is being introduced and the study is completed simply to show it does not perform worse than the existing option(s).&lt;/p&gt;
+&lt;p&gt;To visualize what these new terms mean, take a look at Figure 1 adapted from &lt;span class=&#34;citation&#34;&gt;D. Lakens, Scheel, and Isager (2018b)&lt;/span&gt;. A Bayesian interpreation of this can also be found in a recent manuscript from &lt;span class=&#34;citation&#34;&gt;Ravenzwaaij et al. (2019)&lt;/span&gt;. In essence, we have 2 sets of tests that MBI is using “under-the-hood” when calculating the percentages for each effect. For mechanistic MBI, the “decisions” are made using a combination of TOST &amp;amp; MET. For clinical MBI, the “decisions” are made with a combination of MET and a non-inferiority test with, most likely, &lt;em&gt;differing&lt;/em&gt; alphas. Now, under the new approach, you are explicitly stated your hypotheses and testing them with one or combination of the tests listed above. If you read the manuscript by &lt;span class=&#34;citation&#34;&gt;Aisbett, Lakens, and Sainani (2020)&lt;/span&gt; you will see this approach is logical and fairly straight forward. But, I imagine many former MBI are unsure how to accomplish this analysis since (1) this usually is not included in typical statistics education and (2) most have relied upon Hopkins’ spreadsheets to automatically perform the necessary calculations. I understand that many sport and exercise scientists do not have the requisite programming experience in SAS and R to feel comfortable with completing these analyses. In my opinion, it is worth the time to learn at least one of these programming languages, but if demand is great enough I will make a spreadsheet and post it to a repository that facilitates version control (e.g., GitHub).&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://aaroncaldwell.us/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/TestingTypes.PNG&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Figure 1. Comparison of hypothesis tests. The traditional nil-hypothesis tests (a) the null hypothesis that the effect is exactly equal to zero. The minimal effects test (b) tests against a null hypothesis of the true effect falling between the upper and lower equivalence bound, and the equivalence test (c) tests against the null hypothesis that the true effect is outside (greater or less than) the equivalence bound. Finally, the non-inferiority test (d) tests against the null hypothesis that the effect is at least as great as the bound (in one direction).&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;application-in-r&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Application in R&lt;/h1&gt;
+&lt;p&gt;First, you will need to have the appropriate R packages for these analyses. I prefer to use &lt;code&gt;afex&lt;/code&gt; &lt;span class=&#34;citation&#34;&gt;(Singmann et al. 2020)&lt;/span&gt; and &lt;code&gt;emmeans&lt;/code&gt; &lt;span class=&#34;citation&#34;&gt;(Lenth 2020)&lt;/span&gt; because I find both pacakges easy to use, but other packages or base R functions could be used for these analyses. If you Google “How do I, insert procedure here, in R” you will likely get a variety of helpful results. So, if the procedures below don’t fit you needs then I’m sure there are numerous other resources within R that will be helpful. I highly suggest searching &lt;a href=&#34;https://stackoverflow.com/questions/tagged/r&#34;&gt;stackoverflow&lt;/a&gt; for potential solutions. We will also use the &lt;code&gt;tidyverse&lt;/code&gt; package &lt;span class=&#34;citation&#34;&gt;(Wickham et al. 2019)&lt;/span&gt; to help manage the data and &lt;code&gt;broom&lt;/code&gt; to produce some nice looking tables &lt;span class=&#34;citation&#34;&gt;(Robinson and Hayes 2020)&lt;/span&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Load the emmeans and afex packages
+library(afex)
+library(emmeans)
+library(tidyverse)
+library(broom)&lt;/code&gt;&lt;/pre&gt;
+&lt;div id=&#34;data&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Data&lt;/h2&gt;
+&lt;p&gt;Now we need some data to analyze. In R this is straight forward since there are preloaded datasets available. For SAS, I will simply export this data as a csv file then import it into SAS using PROC IMPORT.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Simple Three-Group 
+data(&amp;quot;PlantGrowth&amp;quot;)
+
+#Factorial 
+data(&amp;quot;ToothGrowth&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;plantgrowth-dataset&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;PlantGrowth Dataset&lt;/h2&gt;
+&lt;div class=&#34;figure&#34;&gt;&lt;span id=&#34;fig:fig-plantgrowth&#34;&gt;&lt;/span&gt;
+&lt;img src=&#34;https://aaroncaldwell.us/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/figure-html/fig-plantgrowth-1.png&#34; alt=&#34;PlantGrowth Data Visualization.&#34; width=&#34;480&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;
+Figure 1: PlantGrowth Data Visualization.
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Description:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“Results from an experiment to compare yields (as measured by dried weight of plants) obtained under a control and two different treatment conditions.”&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(PlantGrowth)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##   weight group
+## 1   4.17  ctrl
+## 2   5.58  ctrl
+## 3   5.18  ctrl
+## 4   6.11  ctrl
+## 5   4.50  ctrl
+## 6   4.61  ctrl&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;toothgrowth-dataset&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;ToothGrowth Dataset&lt;/h2&gt;
+&lt;div class=&#34;figure&#34;&gt;&lt;span id=&#34;fig:fig-toothgrowth&#34;&gt;&lt;/span&gt;
+&lt;img src=&#34;https://aaroncaldwell.us/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/figure-html/fig-toothgrowth-1.png&#34; alt=&#34;ToothGrowth Data Visualization.&#34; width=&#34;480&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;
+Figure 2: ToothGrowth Data Visualization.
+&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;Description:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;“The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC).”&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;head(ToothGrowth)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##    len supp dose
+## 1  4.2   VC  0.5
+## 2 11.5   VC  0.5
+## 3  7.3   VC  0.5
+## 4  5.8   VC  0.5
+## 5  6.4   VC  0.5
+## 6 10.0   VC  0.5&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;analysis-of-plantgrowth&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Analysis of PlantGrowth&lt;/h2&gt;
+&lt;p&gt;We will first have to add an “id” column to the PlantGrowth dataset and then build the ANOVA model using &lt;code&gt;afex&lt;/code&gt;. In this scenario, we will consider a difference of 1 unit of &lt;code&gt;weight&lt;/code&gt; to be the SESOI.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;PlantGrowth = PlantGrowth %&amp;gt;% 
+  dplyr::mutate(id = rownames(PlantGrowth)) 
+mod_plantgrowth = afex::aov_car(weight ~ group + Error(id), 
+                                data = PlantGrowth)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Contrasts set to contr.sum for the following variables: group&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;tidyaov_plantgrowth = broom::tidy(mod_plantgrowth$aov)
+knitr::kable(tidyaov_plantgrowth)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;term&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;sumsq&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;meansq&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;statistic&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.76634&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.8831700&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;4.846088&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.01591&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;Residuals&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.49209&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.3885959&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now, that we have a linear model this can be passed onto the &lt;code&gt;emmeans&lt;/code&gt; package for equivalence and minimal effects testing.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;mechanistic-equivalence-met-analysis&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Mechanistic (Equivalence-MET) Analysis&lt;/h2&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;emm_plants = emmeans(mod_plantgrowth, trt.vs.ctrl1 ~ group, 
+                     adjust = &amp;quot;none&amp;quot;) 
+# Sets one group as the control to compare against the treatments
+
+# Note that adjust has to be set to &amp;quot;none&amp;quot; 
+# otherwise the dunnett correction is applied
+knitr::kable(confint(emm_plants$contrasts, level = .9), 
+             caption = &amp;quot;Pairwise Comparisons with 90% C.I.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-6&#34;&gt;Table 1: &lt;/span&gt;Pairwise Comparisons with 90% C.I.&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;lower.CL&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;upper.CL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt1 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.371&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.8458455&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1038455&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt2 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.494&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0191545&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9688455&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Equivalence Test
+emm_equivalence = test(emm_plants, 
+                       delta = 1, adjust = &amp;quot;none&amp;quot;)
+knitr::kable(emm_equivalence$contrasts, 
+             caption = &amp;quot;Equivalence Tests&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-7&#34;&gt;Table 2: &lt;/span&gt;Equivalence Tests&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt1 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.371&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-2.256246&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0161798&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt2 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.494&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.815041&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0403211&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;If we check the 90% confidence intervals, we can see that the upper limit (UL) is lower than the upper equivalence bound, but greater than the lower limit (LL) of the equivalence bound indicating equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that both treatments are statistically equivalent (at least at our prespecified SESOI; &lt;code&gt;delta&lt;/code&gt; parameter in the &lt;code&gt;test&lt;/code&gt; function). Notice that only 1 &lt;em&gt;p&lt;/em&gt;-value is reported, &lt;code&gt;emmeans&lt;/code&gt; completes equivalence testing by taking the absolute difference between groups.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;equation-emmeans-appears-to-be-using-for-equivalence-testing&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Equation &lt;code&gt;emmeans&lt;/code&gt; appears to be using for equivalence testing:&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&#34;https://render.githubusercontent.com/render/math?math=%24t%20%3D%20%5Cfrac%7B%7CM_%7B1%7D-M_%7B2%7D%7C-%5Cdelta%7D%7BSEM%7D%24&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Where M&lt;sub&gt;1&lt;/sub&gt; and M&lt;sub&gt;2&lt;/sub&gt; represent the means in condition 1 and condition 2 respectively, and &lt;img src=&#34;https://render.githubusercontent.com/render/math?math=%24%5Cdelta%24&#34; /&gt; represents a &lt;em&gt;symmetrical&lt;/em&gt; equivalence bound, and SEM is the standard error of the mean.&lt;/p&gt;
+&lt;p&gt;Also, this is a one-tailed &lt;em&gt;t&lt;/em&gt;-test:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://render.githubusercontent.com/render/math?math=%24p%20%3D%20Pr(T_%7Bcrit%7D%20%3C%20t)%24&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Not a two-tailed test:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://render.githubusercontent.com/render/math?math=%24p%20%3D%202%20%5Ccdot%20Pr(T_%7Bcrit%7D%20%3E%20%7Ct%7C)%24&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;While it is unnecessary given the equivalence tests results, let’s see how we could perform the METs in both directions (positive and negative).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Minimal Effects Test: Positive
+emm_MET = test(emm_plants, null = 1, 
+               adjust = &amp;quot;none&amp;quot;, side = &amp;quot;&amp;gt;&amp;quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &amp;quot;Minimal Effects Test: Positive&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-9&#34;&gt;Table 3: &lt;/span&gt;Minimal Effects Test: Positive&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt1 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.371&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-4.917828&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9999810&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt2 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.494&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.815041&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9596789&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Minimal Effects Test: Negative
+emm_MET = test(emm_plants, null = -1, adjust = &amp;quot;none&amp;quot;, side = &amp;quot;&amp;lt;&amp;quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &amp;quot;Minimal Effects Test: Negative&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-10&#34;&gt;Table 4: &lt;/span&gt;Minimal Effects Test: Negative&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt1 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.371&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.256246&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9838202&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt2 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.494&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5.359034&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9999942&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The conclusions from a “mechanistic” inference: &lt;strong&gt;Both treatments, compared to control, are moderately compatible with equivalence&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;clinical-met-non-inferiority-analysis&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Clinical (MET &amp;amp; Non-Inferiority Analysis)&lt;/h2&gt;
+&lt;p&gt;The data can also be interpreted with the “clinical MBI” approach which essentially boils down to a strict (low alpha; default = .005) and a more lax MET for benefit (high alpha; default = .25). In any case, individual researchers should set the alpha-level &lt;em&gt;a priori&lt;/em&gt; and justify this decision &lt;span class=&#34;citation&#34;&gt;(Lakens et al. 2018; “Justify Your Alpha by Minimizing or Balancing Error Rate,” n.d.)&lt;/span&gt;.&lt;/p&gt;
+&lt;p&gt;For simplicity let’s keep the defaults for this analysis.&lt;/p&gt;
+&lt;p&gt;First, we need to perform the non-inferiority tests. Luckily this is easy with &lt;code&gt;emmeans&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Non-Inferiority Test
+emm_nonif = test(emm_plants, delta = 1, 
+                 adjust = &amp;quot;none&amp;quot;, 
+                 side = &amp;quot;noninferiority&amp;quot;)
+knitr::kable(emm_nonif$contrasts, 
+             caption = &amp;quot;Clinical Non-Inferiority&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-11&#34;&gt;Table 5: &lt;/span&gt;Clinical Non-Inferiority&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt1 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.371&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.256246&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0161798&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt2 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.494&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5.359034&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000058&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Treatment 1 (trt1) is only moderately compatible (given our predetermined alpha) with non-inferiority, but treatment 2 is strongly compatible (&lt;em&gt;p&lt;/em&gt; &amp;lt; .005) with non-inferiority.&lt;/p&gt;
+&lt;p&gt;Now we can perform a MET for the benefit, but notice how the use of the &lt;code&gt;test&lt;/code&gt; function has changed. Now, we call the &lt;code&gt;null&lt;/code&gt; and &lt;code&gt;side&lt;/code&gt; parameters to set the threshold and direction of the statistical test. In this case we can keep null as the same value since we are testing a positive effect and side is set to “&amp;gt;” to indicate we are testing for superiority.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Minimal Effects Test
+emm_nonif = test(emm_plants, null = 1, 
+                 adjust = &amp;quot;none&amp;quot;, side = &amp;quot;&amp;gt;&amp;quot;)
+knitr::kable(emm_nonif$contrasts, 
+             caption = &amp;quot;Clinical MET&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-12&#34;&gt;Table 6: &lt;/span&gt;Clinical MET&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt1 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.371&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-4.917828&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9999810&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt2 - ctrl&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.494&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2787816&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;27&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.815041&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9596789&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Conclusion: &lt;strong&gt;Do not use trt1 because we cannot assume non-inferiority. However, we can use trt2, which is compatible with non-inferiority, despite no evidence of any meaningful benefit.&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;analysis-of-toothgrowth-data&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Analysis of ToothGrowth Data&lt;/h2&gt;
+&lt;p&gt;Again, we will need to add an “id” column to the ToothGrowth dataset and then build the ANOVA model using &lt;code&gt;afex&lt;/code&gt;. Notice this time there is a interaction in the ANOVA. Also, in this case, we believe a difference of 3 units in &lt;code&gt;len&lt;/code&gt; to be the SESOI.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;ToothGrowth = ToothGrowth %&amp;gt;% 
+  dplyr::mutate(id = rownames(ToothGrowth)) 
+mod_Toothgrowth = afex::aov_car(len ~ supp*dose + Error(id),
+                                data = ToothGrowth)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Converting to factor: dose&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Contrasts set to contr.sum for the following variables: supp, dose&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;tidyaov_Toothgrowth = broom::tidy(mod_Toothgrowth$aov)
+
+knitr::kable(tidyaov_Toothgrowth)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;term&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;sumsq&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;meansq&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;statistic&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;supp&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;205.350&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;205.35000&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;15.571979&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0002312&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;dose&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2426.434&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1213.21717&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;91.999965&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;supp:dose&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;108.319&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54.15950&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;4.106991&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0218603&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;Residuals&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;712.106&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;13.18715&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now that we have a linear model this can be passed onto the &lt;code&gt;emmeans&lt;/code&gt; package for equivalence and minimal effects testing.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;mechanistic-equivalence-met-analysis-1&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Mechanistic (Equivalence-MET) Analysis&lt;/h2&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;Compare Dosage&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;First, we want to compare Vitamin C dosage within each delivery method (VC or OJ) to see its effect on tooth growth.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;emm_Tooths = emmeans(mod_Toothgrowth, 
+                     revpairwise ~ dose|supp, 
+                     adjust = &amp;quot;none&amp;quot;) 
+# Pairwise comparisions within each treatment across dosages
+
+# Note that adjust has to be set to &amp;quot;none&amp;quot; 
+# otherwise the dunnett correction is applied
+knitr::kable(confint(emm_Tooths$contrasts, level = .9), 
+             caption = &amp;quot;Pairwise Comparisons with 90% C.I.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-14&#34;&gt;Table 7: &lt;/span&gt;Pairwise Comparisons with 90% C.I.&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;supp&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;lower.CL&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;upper.CL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;1 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.47&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.752103&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;12.187897&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;12.83&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.112103&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;15.547897&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.36&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.642103&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.077897&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;1 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;8.79&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.072103&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;11.507897&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;18.16&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;15.442103&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;20.877897&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.37&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.652103&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;12.087897&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Equivalence Test
+emm_equivalence = test(emm_Tooths, 
+                       delta = 3, adjust = &amp;quot;none&amp;quot;)
+knitr::kable(emm_equivalence$contrasts, 
+             caption = &amp;quot;Equivalence Tests&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-14&#34;&gt;Table 7: &lt;/span&gt;Equivalence Tests&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;supp&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;1 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.47&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.9839496&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9998977&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;12.83&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.0528941&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9999999&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.36&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2216726&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5872975&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;1 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;8.79&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.5652347&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9996148&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;18.16&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.3348805&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.37&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.9223739&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9998752&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;If we check the 90% confidence intervals, we can see that the lower limit (LL) is higher than the upper equivalence bound, in all but one condition, indicating non-equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that &lt;strong&gt;none&lt;/strong&gt; of the doses in either treatment can be considered equivalent.&lt;/p&gt;
+&lt;p&gt;Now, let’s perform the METs in both directions (positive and negative).&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Minimal Effects Test: Positive
+emm_MET = test(emm_Tooths, null = 3, 
+               adjust = &amp;quot;none&amp;quot;, side = &amp;quot;&amp;gt;&amp;quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &amp;quot;Minimal Effects Test: Positive&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-15&#34;&gt;Table 8: &lt;/span&gt;Minimal Effects Test: Positive&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;supp&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;1 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.47&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.9839496&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0001023&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;12.83&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.0528941&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000001&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.36&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2216726&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.4127025&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;1 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;8.79&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.5652347&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0003852&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;18.16&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.3348805&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.37&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.9223739&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0001248&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Minimal Effects Test: Negative
+emm_MET = test(emm_Tooths, null = -3, 
+               adjust = &amp;quot;none&amp;quot;, side = &amp;quot;&amp;lt;&amp;quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &amp;quot;Minimal Effects Test: Negative&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-15&#34;&gt;Table 8: &lt;/span&gt;Minimal Effects Test: Negative&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;supp&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;1 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.47&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.678493&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;12.83&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.747438&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;OJ&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.36&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.916216&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9998727&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;1 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;8.79&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.259778&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 0.5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;18.16&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;13.029424&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;2 - 1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;VC&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;9.37&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.616918&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;We see that the data, in almost all conditions, is highly compatible with the hypothesis that a higher dosage results in a meaningful positive effect. However, it is inconclusive (non-equivalent and non-positive) if increasing dosage with OJ to 2 from 1 improves tooth growth.&lt;/p&gt;
+&lt;p&gt;The conclusions from a “mechanistic” inference: &lt;strong&gt;Increasing dosage of OJ or VC results in increased tooth growth, but it is inconclusive if increasing OJ dosage (from 1 to 2) results in a meaningful improvement.&lt;/strong&gt;&lt;/p&gt;
+&lt;ol start=&#34;2&#34; style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;Compare Delivery Methods&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;You may want to compare each delivery method at the specified doses. To do so, you simply flip the order of the factors in &lt;code&gt;emmeans&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;emm_Tooths = emmeans(mod_Toothgrowth, 
+                     revpairwise ~ supp|dose, 
+                     adjust = &amp;quot;none&amp;quot;) 
+
+knitr::kable(confint(emm_Tooths$contrasts, level = .9), 
+             caption = &amp;quot;Pairwise Comparisons with 90% C.I.&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-16&#34;&gt;Table 9: &lt;/span&gt;Pairwise Comparisons with 90% C.I.&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;dose&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;lower.CL&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;upper.CL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-7.967897&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-2.532103&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.93&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-8.647897&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3.212103&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.08&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-2.637897&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.797897&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Equivalence Test
+emm_equivalence = test(emm_Tooths, 
+                       delta = 3, adjust = &amp;quot;none&amp;quot;)
+knitr::kable(emm_equivalence$contrasts, 
+             caption = &amp;quot;Equivalence Tests&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-16&#34;&gt;Table 9: &lt;/span&gt;Equivalence Tests&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;dose&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.385454&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9141950&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.93&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.804169&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9616084&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.08&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.798011&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0388832&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Minimal Effects Test: Positive
+emm_MET = test(emm_Tooths, null = 3, 
+               adjust = &amp;quot;none&amp;quot;, side = &amp;quot;&amp;gt;&amp;quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &amp;quot;Minimal Effects Test: Positive&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-16&#34;&gt;Table 9: &lt;/span&gt;Minimal Effects Test: Positive&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;dose&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.079998&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9999976&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.93&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.498713&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9999995&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.08&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.798011&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9611168&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Minimal Effects Test: Negative
+emm_MET = test(emm_Tooths, null = -3, 
+               adjust = &amp;quot;none&amp;quot;, side = &amp;quot;&amp;lt;&amp;quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &amp;quot;Minimal Effects Test: Negative&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-16&#34;&gt;Table 9: &lt;/span&gt;Minimal Effects Test: Negative&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;dose&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.385454&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0858050&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.93&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.804169&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0383916&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.08&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.896532&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9683779&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Conclusion: &lt;strong&gt;the data is weakly compatible with a negative effect of VC at the lower 2 doses, but is moderately compatible with equivalence at the highest dosage.&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;clinical-met-non-inferiority-analysis-1&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Clinical (MET &amp;amp; Non-Inferiority Analysis)&lt;/h2&gt;
+&lt;p&gt;For the “clinical MBI” approach let’s again use the same alphas as before (non-inferiority: .005 and MET: .25)&lt;/p&gt;
+&lt;p&gt;For simplicity, let’s just compare the delivery methods at each dosage.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Non-Inferiority Test
+emm_nonif = test(emm_Tooths, delta = 3, 
+                 adjust = &amp;quot;none&amp;quot;, 
+                 side = &amp;quot;noninferiority&amp;quot;)
+knitr::kable(emm_nonif$contrasts, 
+             caption = &amp;quot;Clinical Non-Inferiority&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-17&#34;&gt;Table 10: &lt;/span&gt;Clinical Non-Inferiority&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;dose&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.385454&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9141950&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.93&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.804169&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9616084&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.08&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.896532&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0316221&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#Minimal Effects Test
+emm_nonif = test(emm_Tooths, null = 3, 
+                 adjust = &amp;quot;none&amp;quot;, side = &amp;quot;&amp;gt;&amp;quot;)
+knitr::kable(emm_nonif$contrasts, 
+             caption = &amp;quot;Clinical MET&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-17&#34;&gt;Table 10: &lt;/span&gt;Clinical MET&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;dose&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.079998&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9999976&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.93&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-5.498713&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9999995&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;VC - OJ&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.08&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.624016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;54&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.798011&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9611168&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;In this case, VC fails to adequately demonstrate non-inferiority.&lt;/p&gt;
+&lt;p&gt;Conclusion: &lt;strong&gt;Do not use VC at any dosage as it does not demonstrate adequate non-inferiority to OJ, and failed to provide any evidence of having a meaningful positive effect.&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;application-in-sas&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Application in SAS&lt;/h1&gt;
+&lt;p&gt;For the most part this will be accomplished using SAS’s PROC MIXED, but a number of procedures also support these functions &lt;span class=&#34;citation&#34;&gt;(Kiernan et al. 2011)&lt;/span&gt;. The only SAS procedure I would suggest &lt;em&gt;not&lt;/em&gt; using is PROC GLM, as I do not believe SAS has done anything to update this procedure in quite some time. I see no advantage of using PROC GLM over PROC MIXED. For simplicity, I will only being doing one analysis for each dataset.&lt;/p&gt;
+&lt;div id=&#34;import-data&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Import Data&lt;/h2&gt;
+&lt;p&gt;First, you will need to export the data from R.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;write.csv(ToothGrowth, &amp;quot;tooth.csv&amp;quot;)
+
+write.csv(PlantGrowth, &amp;quot;plant.csv&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now, we can import it into SAS with PROC IMPORT. Remember, to change the file path!&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PROC IMPORT OUT= WORK.plant 
+            DATAFILE= &amp;quot;C:\Users\aaron.caldwell\Documents\plant.csv&amp;quot; 
+            DBMS=CSV REPLACE;
+     GETNAMES=YES;
+     DATAROW=2; 
+RUN;
+
+PROC IMPORT OUT= WORK.tooth 
+            DATAFILE= &amp;quot;C:\Users\aaron.caldwell\Documents\tooth.csv&amp;quot; 
+            DBMS=CSV REPLACE;
+     GETNAMES=YES;
+     DATAROW=2; 
+RUN;&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;div id=&#34;analysis-of-plantgrowth-mechanistic-equivalence-met-analysis&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Analysis of PlantGrowth – Mechanistic (Equivalence-MET) Analysis&lt;/h2&gt;
+&lt;p&gt;In this scenario, we will consider a difference of 1 unit of &lt;code&gt;weight&lt;/code&gt; to be the SESOI.&lt;/p&gt;
+&lt;p&gt;Now, in SAS’s PROC MIXED equivalence and minimal effects testing will be carried out via the LSMESTIMATE statement.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;
+/*Mechanistic MBI */
+title &amp;quot;Mechanistic MBI: PlantGrowth&amp;quot;;
+PROC MIXED data=plant;
+class group;
+model weight = group;
+lsmeans group / CL; /*Gets all the means and CI for each condition*/
+lsmestimate group
+&amp;quot;ctrl v trt1&amp;quot; [1, 1] [-1,2], /*The first number sets the contrast and the assigns the level of group*/
+&amp;quot;ctrl v trt2&amp;quot; [1, 1] [-1,3]
+/ TESTVALUE=-1 UPPER CL; /*Lower bound equivalence test*/
+lsmestimate group
+&amp;quot;ctrl v trt1&amp;quot; [1, 1] [-1,2],
+&amp;quot;ctrl v trt2&amp;quot; [1, 1] [-1,3]
+/ TESTVALUE=1 LOWER CL; /*Upper bound equivalence test*/
+run;
+quit;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://aaroncaldwell.us/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/Mech_Eq_Plant.PNG&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Figure 2. LSMESTIMATE Results for Equivalence Testing on Plant Data.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;If we check the confidence limits, we can see that the upper limit (UL) is lower than the upper equivalence bound, but greater than the lower limit (LL) of the equivalence bound indicating equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that both treatments are statistically equivalent (at least at our prespecified SESOI set by the &lt;code&gt;TESTVALUE&lt;/code&gt; parameter in the &lt;code&gt;LSMESTIMATE&lt;/code&gt; statement). Notice that only 2 &lt;em&gt;p&lt;/em&gt;-values are reported, unlike &lt;code&gt;emmeans&lt;/code&gt; we must perform an upper bound &lt;em&gt;and&lt;/em&gt; lower bound test. We only infer equivalence if the &lt;em&gt;highest&lt;/em&gt; &lt;em&gt;p&lt;/em&gt;-value for each comparison is less than the predetermined alpha.&lt;/p&gt;
+&lt;p&gt;The conclusions from a “mechanistic” inference: &lt;strong&gt;Both treatments, compared to control, are moderately compatible with equivalence&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;toothgrowth-clinical-met-non-inferiority-analysis&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;ToothGrowth Clinical (MET &amp;amp; Non-Inferiority) Analysis&lt;/h2&gt;
+&lt;p&gt;This is fairly straight forward in SAS. All we need to do is modify the upper bound &lt;code&gt;TESTVALUE&lt;/code&gt; and modify the &lt;code&gt;alpha&lt;/code&gt;.
+For the “clinical MBI” approach let’s change the alpha for the MET (non-inferiority: .005 and MET: .2).&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;/*Clinical MBI */
+title &amp;quot;Clinical MBI: ToothGrowth&amp;quot;;
+PROC MIXED data=tooth;
+class supp dose;
+model len = supp|dose;
+lsmeans supp*dose / CL;  /*Gets all the means and CI for each condition*/
+lsmestimate supp*dose
+&amp;quot;OJ vs VC @ 0.5 mg dose&amp;quot; [-1, 1 3] [1, 2 3],
+&amp;quot;OJ vs VC @ 1 mg dose&amp;quot; [-1, 1 1] [1, 2 1],
+&amp;quot;OJ vs VC @ 2 mg dose&amp;quot; [-1, 1 2] [1, 2 2]
+/ TESTVALUE=-1 CL UPPER alpha=.005;
+lsmestimate supp*dose
+&amp;quot;OJ vs VC @ 0.5 mg dose&amp;quot; [-1, 1 3] [1, 2 3],
+&amp;quot;OJ vs VC @ 1 mg dose&amp;quot; [-1, 1 1] [1, 2 1],
+&amp;quot;OJ vs VC @ 2 mg dose&amp;quot; [-1, 1 2] [1, 2 2]
+/ TESTVALUE=1 CL UPPER alpha=.2;
+run;
+quit;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;For simplicity, let’s just compare the delivery methods at each dosage.&lt;/p&gt;
+&lt;div class=&#34;figure&#34;&gt;
+&lt;img src=&#34;https://aaroncaldwell.us/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/Clin_Eq_Tooth.PNG&#34; alt=&#34;&#34; /&gt;
+&lt;p class=&#34;caption&#34;&gt;Figure 3. LSMESTIMATE Results for Equivalence Testing on Tooth Data.&lt;/p&gt;
+&lt;/div&gt;
+&lt;p&gt;In this case, VC fails to adequately demonstrate non-inferiority.&lt;/p&gt;
+&lt;p&gt;Conclusion: &lt;strong&gt;Do not use VC at any dosage as it does not demonstrate adequate non-inferiority to OJ, and failed to provide any evidence of having a meaningful positive effect.&lt;/strong&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;writing-your-methods&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Writing your Methods&lt;/h1&gt;
+&lt;p&gt;One of the more frustrating problems I noticed with research reporting MBI in the past was the lack of detail in their methods sections about the statistical methods they utilized.
+Frankly this is a problem in most sport and exercise science manuscripts, not just those that utilized MBI.
+Therefore, I have created a short list of items that should always be included if you are using this approach.&lt;/p&gt;
+&lt;ol style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;strong&gt;Note what types of hypotheses you are testing.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;If you are using the “mechanistic” approach: note that you are simply performing an equivalence/MET test&lt;/li&gt;
+&lt;li&gt;If you are using the “clincal” approach: note that you are using a non-inferiority test &lt;strong&gt;and&lt;/strong&gt; a minimal effects test&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&#34;2&#34; style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;strong&gt;State the alpha level(s)&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;Even if you are using the “compatibility” bounds outlined by &lt;span class=&#34;citation&#34;&gt;Aisbett, Lakens, and Sainani (2020)&lt;/span&gt; you should directly state the alpha levels for used within your manuscript.&lt;/li&gt;
+&lt;li&gt;Justifying your alpha can be difficult and should be done &lt;em&gt;a priori&lt;/em&gt;. Most likely, this can be accomplished when you are planning your sample size for data collection by balancing your type 1 and type 2 error using a compromise power analysis.
+&lt;ul&gt;
+&lt;li&gt;There are blog posts from &lt;a href=&#34;https://blog.minitab.com/blog/understanding-statistics/which-statistical-error-is-worse-type-1-or-type-2&#34;&gt;minitab&lt;/a&gt; and &lt;a href=&#34;http://daniellakens.blogspot.com/2019/05/justifying-your-alpha-by-minimizing-or.html&#34;&gt;Lakens&lt;/a&gt; that may be helpful here.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&#34;3&#34; style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;strong&gt;State your smallest effect size(s) of interest (SESOI)&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;In most cases of MBI users have defaulted to a difference of 0.2 standard deviations (Cohen’s d = 0.2)&lt;/li&gt;
+&lt;li&gt;I would encourage researchers to have justification for their SESOI whether based on practitioner preferences (e.g., “coaches have stated an interest in an effect of X magnitude”) or based on empirical evidence.
+-For empirical justifications, I suggest reading the DETLA2 guidelines &lt;span class=&#34;citation&#34;&gt;(Cook et al. 2018)&lt;/span&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&#34;4&#34; style=&#34;list-style-type: decimal&#34;&gt;
+&lt;li&gt;&lt;strong&gt;Note and cite what statistical software and programs you used to analyze the data.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;Try to be specific and include version number
+&lt;ul&gt;
+&lt;li&gt;This is important because as the software is updated some calculations may change.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&#34;concluding-remarks&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Concluding Remarks&lt;/h1&gt;
+&lt;p&gt;Any researcher is capable of performing the appropriate equivalence, MET, and non-inferiority tests in R or SAS. As I have documented, making a “magnitude based inference” is fairly simple and straight forward procedure when it is viewed through these lenses. All of these approaches (equivalence, MET, and non-inferiority tests) in the scenarios I have outlined are special cases of a one-tailed &lt;em&gt;t&lt;/em&gt;-test. Researchers who would like to adopt this approach should read the work by &lt;span class=&#34;citation&#34;&gt;Aisbett, Lakens, and Sainani (2020)&lt;/span&gt; to ensure they fully understand the statistical framework. Both Batterham &amp;amp; Hopkins, the creators of MBI, should be also commended for moving the conversation surrounding statistical inference in sport science from a focus on “nil hypotheses” to a focus on the magnitude of the effect size. However, I would strongly encourage all sports scientists that have used magnitude based inference in the past to adopt this straightforward frequentist approach or adopt a fully Bayesian approach to inference &lt;span class=&#34;citation&#34;&gt;(Ravenzwaaij et al. 2019)&lt;/span&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;questions&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Questions?&lt;/h1&gt;
+&lt;p&gt;If you have any questions, please feel free to &lt;a href=&#34;https://aaroncaldwell.us/&#34;&gt;contact me&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;references&#34; class=&#34;section level1 unnumbered&#34;&gt;
+&lt;h1&gt;References&lt;/h1&gt;
+&lt;div id=&#34;refs&#34; class=&#34;references&#34;&gt;
+&lt;div id=&#34;ref-Aisbett2020&#34;&gt;
+&lt;p&gt;Aisbett, Janet, Daniel Lakens, and Kristin Sainani. 2020. “Magnitude Based Inference in Relation to One-Sided Hypotheses Testing Procedures,” May. &lt;a href=&#34;https://doi.org/10.31236/osf.io/pn9s3&#34;&gt;https://doi.org/10.31236/osf.io/pn9s3&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-Amrhein2019&#34;&gt;
+&lt;p&gt;Amrhein, Valentin, David Trafimow, and Sander Greenland. 2019. “Inferential Statistics as Descriptive Statistics: There Is No Replication Crisis If We Don’t Expect Replication.” &lt;em&gt;The American Statistician&lt;/em&gt; 73 (sup1): 262–70. &lt;a href=&#34;https://doi.org/10.1080/00031305.2018.1543137&#34;&gt;https://doi.org/10.1080/00031305.2018.1543137&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-Batterham_Hopkins_2006&#34;&gt;
+&lt;p&gt;Batterham, Alan M., and William G. Hopkins. 2006. “Making Meaningful Inferences About Magnitudes.” &lt;em&gt;International Journal of Sports Physiology and Performance&lt;/em&gt; 1 (1): 50–57. &lt;a href=&#34;https://doi.org/10.1123/ijspp.1.1.50&#34;&gt;https://doi.org/10.1123/ijspp.1.1.50&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-chow2019semantic&#34;&gt;
+&lt;p&gt;Chow, Zad R., and Sander Greenland. 2019. “Semantic and Cognitive Tools to Aid Statistical Inference: Replace Confidence and Significance by Compatibility and Surprise.” &lt;a href=&#34;http://arxiv.org/abs/1909.08579&#34;&gt;http://arxiv.org/abs/1909.08579&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-cook2018&#34;&gt;
+&lt;p&gt;Cook, Jonathan A., Steven A. Julious, William Sones, Lisa V. Hampson, Catherine Hewitt, Jesse A. Berlin, Deborah Ashby, et al. 2018. “Choosing the Target Difference (&amp;amp;Ldquo&lt;span class=&#34;math inline&#34;&gt;\(\mathsemicolon\)&lt;/span&gt;effect Size&amp;amp;rdquo&lt;span class=&#34;math inline&#34;&gt;\(\mathsemicolon\)&lt;/span&gt;) for a Randomised Controlled Trial - DELTA&lt;span class=&#34;math inline&#34;&gt;\(\less\)&lt;/span&gt;sup&lt;span class=&#34;math inline&#34;&gt;\(\greater\)&lt;/span&gt;2&lt;span class=&#34;math inline&#34;&gt;\(\less\)&lt;/span&gt;/Sup&lt;span class=&#34;math inline&#34;&gt;\(\greater\)&lt;/span&gt;&amp;amp;nbsp&lt;span class=&#34;math inline&#34;&gt;\(\mathsemicolon\)&lt;/span&gt;Guidance,” August. &lt;a href=&#34;https://doi.org/10.20944/preprints201808.0521.v1&#34;&gt;https://doi.org/10.20944/preprints201808.0521.v1&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-s2019aid&#34;&gt;
+&lt;p&gt;Greenland, Sander, and Zad R. Chow. 2019. “To Aid Statistical Inference, Emphasize Unconditional Descriptions of Statistics.” &lt;a href=&#34;http://arxiv.org/abs/1909.08583&#34;&gt;http://arxiv.org/abs/1909.08583&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-blog-JYA&#34;&gt;
+&lt;p&gt;“Justify Your Alpha by Minimizing or Balancing Error Rate.” n.d. &lt;a href=&#34;http://http://daniellakens.blogspot.com/2019/05/justifying-your-alpha-by-minimizing-or.html&#34;&gt;http://http://daniellakens.blogspot.com/2019/05/justifying-your-alpha-by-minimizing-or.html&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-SAS_lsmestimate&#34;&gt;
+&lt;p&gt;Kiernan, Kathleen, Randy Tobias, Phil Gibbs, and Jill Tao. 2011. “CONTRAST and Estimate Statements Made Easy: The Lsmestimate Statement.” &lt;em&gt;SAS Global Forum&lt;/em&gt; 2011 (351): 1–19. &lt;a href=&#34;https://support.sas.com/resources/papers/proceedings11/351-2011.pdf&#34;&gt;https://support.sas.com/resources/papers/proceedings11/351-2011.pdf&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-lakens-JYA&#34;&gt;
+&lt;p&gt;Lakens, Daniel, Federico G. Adolfi, Casper J. Albers, Farid Anvari, Matthew A. J. Apps, Shlomo E. Argamon, Thom Baguley, et al. 2018. “Justify Your Alpha.” &lt;em&gt;Nature Human Behaviour&lt;/em&gt; 2 (3): 168–71. &lt;a href=&#34;https://doi.org/10.1038/s41562-018-0311-x&#34;&gt;https://doi.org/10.1038/s41562-018-0311-x&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-Lakens2018&#34;&gt;
+&lt;p&gt;Lakens, Daniël, Anne M. Scheel, and Peder M. Isager. 2018a. “Equivalence Testing for Psychological Research: A Tutorial.” &lt;em&gt;Advances in Methods and Practices in Psychological Science&lt;/em&gt; 1 (2): 259–69. &lt;a href=&#34;https://doi.org/10.1177/2515245918770963&#34;&gt;https://doi.org/10.1177/2515245918770963&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-Lakens_Scheel_Isager_2018&#34;&gt;
+&lt;p&gt;———. 2018b. “Equivalence Testing for Psychological Research: A Tutorial.” &lt;em&gt;Advances in Methods and Practices in Psychological Science&lt;/em&gt; 1 (2): 259–69. &lt;a href=&#34;https://doi.org/10.1177/2515245918770963&#34;&gt;https://doi.org/10.1177/2515245918770963&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-R-emmeans&#34;&gt;
+&lt;p&gt;Lenth, Russell. 2020. &lt;em&gt;Emmeans: Estimated Marginal Means, Aka Least-Squares Means&lt;/em&gt;. &lt;a href=&#34;https://CRAN.R-project.org/package=emmeans&#34;&gt;https://CRAN.R-project.org/package=emmeans&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-Lohse2020&#34;&gt;
+&lt;p&gt;Lohse, Keith, Kristin Sainani, J. Andrew Taylor, Michael Lloyd Butson, Emma Knight, and Andrew Vickers. 2020. “Systematic Review of the Use of ‘Magnitude-Based Inference’ in Sports Science and Medicine.” Center for Open Science. &lt;a href=&#34;https://doi.org/10.31236/osf.io/wugcr&#34;&gt;https://doi.org/10.31236/osf.io/wugcr&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-R-mbir&#34;&gt;
+&lt;p&gt;Peterson, Kyle, and Aaron Caldwell. 2019. &lt;em&gt;Mbir: Magnitude-Based Inferences&lt;/em&gt;. &lt;a href=&#34;https://CRAN.R-project.org/package=mbir&#34;&gt;https://CRAN.R-project.org/package=mbir&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-concurve&#34;&gt;
+&lt;p&gt;Rafi, Zad, and Andrew D. Vigotsky. 2020. &lt;em&gt;concurve: Computes and Plots Compatibility (Confidence) Intervals, P-Values, S-Values, &amp;amp; Likelihood Intervals to Form Consonance, Surprisal, &amp;amp; Likelihood Functions&lt;/em&gt;. &lt;a href=&#34;https://CRAN.R-project.org/package=concurve&#34;&gt;https://CRAN.R-project.org/package=concurve&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-vanRavenzwaaij2019&#34;&gt;
+&lt;p&gt;Ravenzwaaij, Don van, Rei Monden, Jorge N. Tendeiro, and John P. A. Ioannidis. 2019. “Bayes Factors for Superiority, Non-Inferiority, and Equivalence Designs.” &lt;em&gt;BMC Medical Research Methodology&lt;/em&gt; 19 (1). &lt;a href=&#34;https://doi.org/10.1186/s12874-019-0699-7&#34;&gt;https://doi.org/10.1186/s12874-019-0699-7&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-R-broom&#34;&gt;
+&lt;p&gt;Robinson, David, and Alex Hayes. 2020. &lt;em&gt;Broom: Convert Statistical Analysis Objects into Tidy Tibbles&lt;/em&gt;. &lt;a href=&#34;https://CRAN.R-project.org/package=broom&#34;&gt;https://CRAN.R-project.org/package=broom&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-Sainani_2018&#34;&gt;
+&lt;p&gt;Sainani, Krisitin. 2018. “The Problem with ‘Magnitude-Based Inference’.” &lt;em&gt;Medicine &amp;amp; Science in Sports &amp;amp; Exercise&lt;/em&gt; 50 (10): 2166–76. &lt;a href=&#34;https://doi.org/10.1249/mss.0000000000001645&#34;&gt;https://doi.org/10.1249/mss.0000000000001645&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-Sainani2019&#34;&gt;
+&lt;p&gt;Sainani, Kristin L., Keith R. Lohse, Paul Remy Jones, and Andrew Vickers. 2019. “Magnitude-Based Inference Is Not Bayesian and Is Not a Valid Method of Inference.” &lt;em&gt;Scandinavian Journal of Medicine &amp;amp; Science in Sports&lt;/em&gt; 29 (9): 1428–36. &lt;a href=&#34;https://doi.org/10.1111/sms.13491&#34;&gt;https://doi.org/10.1111/sms.13491&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-R-afex&#34;&gt;
+&lt;p&gt;Singmann, Henrik, Ben Bolker, Jake Westfall, Frederik Aust, and Mattan S. Ben-Shachar. 2020. &lt;em&gt;Afex: Analysis of Factorial Experiments&lt;/em&gt;. &lt;a href=&#34;https://CRAN.R-project.org/package=afex&#34;&gt;https://CRAN.R-project.org/package=afex&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;ref-R-tidyverse&#34;&gt;
+&lt;p&gt;Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy D’Agostino McGowan, Romain François, Garrett Grolemund, et al. 2019. “Welcome to the tidyverse.” &lt;em&gt;Journal of Open Source Software&lt;/em&gt; 4 (43): 1686. &lt;a href=&#34;https://doi.org/10.21105/joss.01686&#34;&gt;https://doi.org/10.21105/joss.01686&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Exact Simulation Power Shiny App</title>
+      <link>https://aaroncaldwell.us/project/shinyexactapp/</link>
+      <pubDate>Mon, 11 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/shinyexactapp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Monte Carlo Power Shiny App</title>
+      <link>https://aaroncaldwell.us/project/shinypowerapp/</link>
+      <pubDate>Mon, 11 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/shinypowerapp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Superpower R package</title>
+      <link>https://aaroncaldwell.us/project/superpowerrpackage/</link>
+      <pubDate>Mon, 11 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/superpowerrpackage/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

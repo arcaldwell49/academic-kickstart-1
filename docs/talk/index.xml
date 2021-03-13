@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Recent &amp; Upcoming Talks | Aaron Caldwell</title>
+    <link>https://aaroncaldwell.us/talk/</link>
+      <atom:link href="https://aaroncaldwell.us/talk/index.xml" rel="self" type="application/rss+xml" />
+    <description>Recent &amp; Upcoming Talks</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Sun, 10 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://aaroncaldwell.us/media/logo.png</url>
+      <title>Recent &amp; Upcoming Talks</title>
+      <link>https://aaroncaldwell.us/talk/</link>
+    </image>
+    
+    <item>
+      <title>Basics of Statistics</title>
+      <link>https://aaroncaldwell.us/talk/basicstats/</link>
+      <pubDate>Sun, 10 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/talk/basicstats/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;Citable as&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;Aaron R. Caldwell (2019) Basics of Statistics for Exercise Science. Guest lecture at UC-San Marcos&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Measuring Sweat Gland Activation</title>
+      <link>https://aaroncaldwell.us/talk/sga/</link>
+      <pubDate>Tue, 18 Apr 2017 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/talk/sga/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;Citable as&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;Aaron R. Caldwell (2017) Measuring Sweat Gland Activation. Presentation at Experimental Biology 2017.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

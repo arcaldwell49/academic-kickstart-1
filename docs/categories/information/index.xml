@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>information | Aaron Caldwell</title>
+    <link>https://aaroncaldwell.us/categories/information/</link>
+      <atom:link href="https://aaroncaldwell.us/categories/information/index.xml" rel="self" type="application/rss+xml" />
+    <description>information</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 11 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://aaroncaldwell.us/media/logo.png</url>
+      <title>information</title>
+      <link>https://aaroncaldwell.us/categories/information/</link>
+    </image>
+    
+    <item>
+      <title>Welcome to my blog</title>
+      <link>https://aaroncaldwell.us/post/welcome-to-my-blog/</link>
+      <pubDate>Mon, 11 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/post/welcome-to-my-blog/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;This is my personal blog area on my website. This is a place for me to express my personal thoughts in a relaxed nature. Most of my writing has been published in academic journals, and most of it is difficult to read and well boring. My hope is this blog will provide me an outlet to communicate directly and informally than my academic writing.&lt;/strong&gt;&lt;/p&gt;
+&lt;h3 id=&#34;what-to-expect&#34;&gt;What to expect&lt;/h3&gt;
+&lt;p&gt;Well, this is the boring part. I am a nerd with an interest in physiology and statistics. That means my blog will mostly focus on those two things. If that is what you are interested then wonderful! I hope you find my blog useful.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

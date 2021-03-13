@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>simulation | Aaron Caldwell</title>
+    <link>https://aaroncaldwell.us/tags/simulation/</link>
+      <atom:link href="https://aaroncaldwell.us/tags/simulation/index.xml" rel="self" type="application/rss+xml" />
+    <description>simulation</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Fri, 29 Jan 2021 16:39:18 -0500</lastBuildDate>
+    <image>
+      <url>https://aaroncaldwell.us/media/logo.png</url>
+      <title>simulation</title>
+      <link>https://aaroncaldwell.us/tags/simulation/</link>
+    </image>
+    
+    <item>
+      <title>Simulating a Study with a Binary Outcome</title>
+      <link>https://aaroncaldwell.us/post/intro-binary-sim/</link>
+      <pubDate>Fri, 29 Jan 2021 16:39:18 -0500</pubDate>
+      <guid>https://aaroncaldwell.us/post/intro-binary-sim/</guid>
+      <description>
+
+
+&lt;div id=&#34;introduction&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Introduction&lt;/h1&gt;
+&lt;p&gt;I was on Twitter the other day and saw that Andrew Althouse had a nice &lt;a href=&#34;https://twitter.com/ADAlthousePhD/status/1353819045829742593?s=20&#34;&gt;thread&lt;/a&gt; on simulating an RCT and I wanted to expand on his suggestions and provide some of my own recommendations. In Andrew’s thread he explicitly used base R and only default &lt;code&gt;stats&lt;/code&gt; functions that are native to R. While these are great tools, they are limited and most researchers wanting to simulate a study will find these tools lacking when trying to simulate their own particular study. This is &lt;em&gt;not&lt;/em&gt; a criticism of Dr. Althouse’s thread, it is a wonderful thread, but I want to so a “tidy” version of this tutorial.&lt;/p&gt;
+&lt;p&gt;In this blog post I will use &lt;code&gt;simstudy&lt;/code&gt; as a way to pseudo-replicate these results. My hope is that this post will help make the process of creating your own simulations a little bit easier. In particular, I will advocate that you create your own functions to simulate your studies. This way you can run multiple variations on your simulation with only a few more lines of code (rather than copy and pasting the whole simulation again and again).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;r-packages&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;R Packages&lt;/h1&gt;
+&lt;p&gt;For this simulation I will try to restrict my use of packages to as few as possible. To simulate the data again I will need the &lt;code&gt;simstudy&lt;/code&gt; package and I will also &lt;code&gt;tidyverse&lt;/code&gt; set of packages to make the code “tidy”. In addition, I will need the&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(simstudy)
+library(tidyverse)
+library(data.table)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;According to Dr. Althouse’s documentation he was trying to simulate the following study:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;This code will mimic a 2-group parallel-arm randomized trial using 1:1 allocation of patients to treatment 1 versus treatment 2&lt;/li&gt;
+&lt;li&gt;For this example, we will use a binary outcome of “death”&lt;/li&gt;
+&lt;li&gt;Patients receiving treatment 1 will have 40% probability of death&lt;/li&gt;
+&lt;li&gt;Patients receiving treatment 2 will have 30% probability of death&lt;/li&gt;
+&lt;li&gt;Analysis will be performed using a logistic regression model&lt;/li&gt;
+&lt;li&gt;We will run 1000 simulated RCT’s and report the odds ratio, 95% confidence interval, and p-value for each simulated trial&lt;/li&gt;
+&lt;li&gt;The “true” treatment effect for a treatment that reduces probability of outcome from 40% to 30% is about OR = 0.642&lt;/li&gt;
+&lt;li&gt;The power of a trial with N=1000 patients and exactly 1:1 allocation under these assumptions is about 91-92%&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&#34;approach&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Approach&lt;/h1&gt;
+&lt;p&gt;So I imagine some people reading this are already starting to sweat about the task ahead. But trust me, if I can do this so can you! OVerall, this is a fairly straightforward process. The process is only made easier when you use the many tools available in R. Also, I am going to create “functions” which essentially means if I want to run the same simulation again (but maybe change 1 or 2 parameters) this can be done with only a few lines of code. This is efficient and if you are serious about writing your own simulations I would highly recommend writing your own functions.&lt;/p&gt;
+&lt;div id=&#34;step-1-create-a-data-generating-function&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Step 1: Create a Data Generating Function&lt;/h2&gt;
+&lt;p&gt;This is part looks more complex than it is. All I am doing is making a function that I will call &lt;code&gt;gen_bidat&lt;/code&gt; (short for “generate binomial data”). One of the things Althouse mentions in his code is that his allocation in the simulation is inappropriate. We can get around that by incorporating the functions from &lt;code&gt;simstudy&lt;/code&gt; (which randomly assigns group) and keeps things organized through the &lt;code&gt;%&amp;gt;%&lt;/code&gt; function. We also will import the &lt;code&gt;data.table&lt;/code&gt; package because the &lt;code&gt;simstudy&lt;/code&gt; package generates data as &lt;code&gt;data.table&lt;/code&gt; type objects.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Define function
+# Parameters
+## N = sample size
+## props = proportions in each group (length is equal to number of groups)
+gen_bidat = function(props,N){
+  # Create data with N participants and balanced assignment to treatment group
+  df = genData(N) %&amp;gt;% # generate data with N participants
+    trtAssign(n = length(props),
+              balanced = TRUE,
+              grpName = &amp;quot;trt&amp;quot;) # Randomly assign treatment (tr) in a balanced fashion  
+  # Get the number of gropus by the number or proportions entered
+  grps = length(props)
+  # generate condition for each group
+  # This creates a conditional output 
+  # I.e., the odds of the outcome is determined by treatment group
+  for(i in 1:grps){ # run loop once for each group in the study
+    grp = i-1 # the simulation runs from 1 to the total number of groups
+    # the i-1 starts the loop at zero
+    # We then assign the group (grp) by which number in the loop we are in
+    con_run = paste0(&amp;quot;trt == &amp;quot;, grp)
+    # We then grab the assign the correct proportion to the groups in order
+    # We have to create the object dc first (i == 1)
+    # All iterations of the loop add to dc rather than creating a new dc
+    if (i == 1) {
+      dc = defCondition(
+        condition = con_run,
+        formula = props[i],
+        dist = &amp;quot;binary&amp;quot;,
+        link = &amp;quot;identity&amp;quot;
+      )
+    } else{
+      dc = defCondition(
+        dc,
+        condition = con_run,
+        formula = props[i],
+        dist = &amp;quot;binary&amp;quot;,
+        link = &amp;quot;identity&amp;quot;
+      )
+    }
+    
+  }
+  # Now we generate the outcome based on the group (condition)
+  dat &amp;lt;- addCondition(condDefs = dc,
+                      dtOld = df,
+                      newvar = &amp;quot;y&amp;quot;)
+  return(dat)
+}
+
+# Test run
+gen_bidat(c(.2,.35),N=10)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;##     id y trt
+##  1:  1 1   1
+##  2:  2 0   1
+##  3:  3 0   0
+##  4:  4 0   0
+##  5:  5 1   0
+##  6:  6 0   0
+##  7:  7 0   0
+##  8:  8 1   1
+##  9:  9 1   1
+## 10: 10 1   1&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;In some cases the function above is enough. We may just want to generate a data set reflective of study we have designed. We can then “play” with the data set to plan analyses for future study. However, that is not what we are after today and we will move onto the power analysis.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;step-2-simulation&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Step 2: Simulation&lt;/h2&gt;
+&lt;p&gt;Now we get fancy and run a simulation. All this means is that we run the simulated data (above) for a number of iterations or repetitions (tyically for thousands of iterations). We can make it a power analysis by counting the number of positive results (e.g., below the significance threshold).&lt;/p&gt;
+&lt;p&gt;For the power analysis I created a &lt;code&gt;pwr_bidat&lt;/code&gt; function that performs a power analysis with a certain number of repetitions (&lt;code&gt;reps&lt;/code&gt; argument). Notice below that I am using the function I just created (&lt;code&gt;gen_bidat&lt;/code&gt;) within the &lt;code&gt;pwr_bidat&lt;/code&gt;. That is why the user must supply the same information as the last function (the proportions, &lt;code&gt;props&lt;/code&gt;, and the sample size, &lt;code&gt;N&lt;/code&gt;). In addition, there are two arguments needed for the power analysis: &lt;code&gt;alpha&lt;/code&gt; and &lt;code&gt;conf.level&lt;/code&gt;. The &lt;code&gt;alpha&lt;/code&gt; argument sets the alpha-level for the analyses (i.e., the significance cutoff). While the &lt;code&gt;conf.level&lt;/code&gt; argument sets the confidence level (e.g., 95%) for the confidence intervals for the power analysis. We can calculate confidence intervals for a simulation because we have a number of “success” over a number of attempts (total number of &lt;code&gt;reps&lt;/code&gt;). We can use the &lt;code&gt;prop.test&lt;/code&gt; function which provides confidence intervals for proportions. This is helpful when for when we are running a small number of simulations and want an idea of what estimates of power are reasonable.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;pwr_bidat = function(props,N,
+                     reps=100,
+                     alpha=.05,
+                     conf.level = .95){
+
+  # Create 1 to reps simulated data sets
+  sims = replicate(n = reps,
+                   gen_bidat(props, N = N),
+                   simplify = FALSE)
+  # Run an equivalent number of analyses
+  sims2 = purrr::map(sims,  ~ glm(y ~ trt,
+                                  data = .x,
+                                  family = binomial(link = &amp;quot;logit&amp;quot;)))
+  # Get the summary coefficients from our models
+  sims3 = purrr::map(sims2,  ~ summary(.x)$coefficients)
+  # Put all the results into a data frame (tibble)
+  sims4 = purrr::map(sims3,
+                     ~ tibble::rownames_to_column(as.data.frame(.x),
+                                                  &amp;quot;coef&amp;quot;))
+  # Combine all the data frames into one
+  simsdf = bind_rows(sims4, .id = &amp;quot;nrep&amp;quot;)
+  # Summarize results by coefficient
+  simspow = simsdf %&amp;gt;%
+    group_by(coef) %&amp;gt;%
+    # Calculate the power (number of results with p-value &amp;lt; alpha)
+    summarize(
+      estimate = mean(Estimate),
+      power = mean(`Pr(&amp;gt;|z|)` &amp;lt; alpha),
+      # Calculate confidence intervals
+      power.lci = prop.test(sum(`Pr(&amp;gt;|z|)` &amp;lt; alpha), reps)$conf.int[1],
+      power.uci = prop.test(sum(`Pr(&amp;gt;|z|)` &amp;lt; alpha), reps)$conf.int[2],
+      .groups = &amp;#39;drop&amp;#39;
+    )
+  
+  # Return table of results
+  return(simspow)
+}
+
+set.seed(01292020)
+pwr_res = pwr_bidat(c(.4,.3),N=1000)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now that we have the results we can create a table as output using the &lt;code&gt;kable&lt;/code&gt; function.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create pretty table to print results
+knitr::kable(pwr_res %&amp;gt;%
+               rename(Coefficients = coef,
+                      `Average Log Odds` = estimate,
+                      Power = power,
+                      `Lower C.I.` = power.lci,
+                      `Upper C.I.` = power.uci),
+             digits = 2,
+             caption = &amp;quot;Result from Power Simulation&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-4&#34;&gt;Table 1: &lt;/span&gt;Result from Power Simulation&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;Coefficients&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;Average Log Odds&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;Power&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;Lower C.I.&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;Upper C.I.&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.40&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.99&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.94&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.00&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.47&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.95&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.88&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.98&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Based on these results we can can conclude that a study of 1000 patients randomly assigned to one of two treatment groups wherein 30% of participants die in treatment group #1 and 40% perish in treatment group #2 will have approximately 95% power [0.88,0.98]. Notice, that compared to Dr. Althouse’s thread, I estimated the power at 95% (thread noted power at ~92.3%). This is to be expected when simulating data and is why a high number of repetitions are needed to determine power.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;why-more-complicated-code&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Why more complicated code?&lt;/h2&gt;
+&lt;p&gt;Well, here is why create functions: it is easier on future me. Say, I run three separate simulations with minor differences so I go about with the Althouse approach (maybe even copy and paste the code a few times). Later, I notice a flaw in my code, or maybe there is a small change that alters all three simulations. Well, if I take the time to create the simulations then all I have to do is change the code in 1 place (where I defined the function) rather than with every chunk of code that includes the simulation code.&lt;/p&gt;
+&lt;p&gt;Also, it is easier to produce variations on the same design. Let’s imagine we are doing a study on a treatment for an infectious disease that has a hospitalization rate of at least 3.5% people that are infected (so treatment occurs immediately upon diagnosis). The study investigators want to know if 2000 patients are enough to detect if the proposed treatment reduces the hospitalization rate at least by half (1.75%).&lt;/p&gt;
+&lt;p&gt;All I have to do is use the same function I have created above but change the arguments in the function.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;pwr_2 = pwr_bidat(c(.035,.0175),N=2000)
+
+knitr::kable(pwr_2,
+             caption = &amp;quot;Another Study of Binary Outcomes&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-5&#34;&gt;Table 2: &lt;/span&gt;Another Study of Binary Outcomes&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;coef&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;power&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;power.lci&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;power.uci&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-3.343981&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.00&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9538987&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;trt&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.704106&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.69&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5885509&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.776633&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now, we have the new results in only 4 lines of code! Based on those results we would likely advise the investigators that they will need a larger sample size to conclude effectiveness for their proposed treatment.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;conclusions&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Conclusions&lt;/h1&gt;
+&lt;p&gt;In this blog post, I have demonstrated how to create 2 R functions that 1) generate data and 2) generate a simulation based power analysis. Simulation is not necessary for a simple analysis such as this where analytic solutions exist in programs like GPower. However, as I will detail in future posts, simulation becomes &lt;em&gt;very&lt;/em&gt; useful when the design becomes complicated (or when we want to violate the assumptions of the models we use).&lt;/p&gt;
+&lt;p&gt;Hopefully, this process appears straightforward. If not send me a message and I can try to bridge the gap!&lt;/p&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

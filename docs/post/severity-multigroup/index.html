@@ -1,0 +1,1970 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  
+
+  
+  
+  
+    
+  
+  <meta name="description" content="Introduction A little over a year ago Patrick Forscher wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:
+ Multi-group designs are the workhorse of scientific psychology. Multi-group designs apply to any grouping of people, within-person states, situations, or stimuli; interest typically centers around the either the means or conditional means within each group.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://aaroncaldwell.us/post/severity-multigroup/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#3f51b5">
+  
+
+  
+  
+  
+  <script src="/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/index.webmanifest">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://aaroncaldwell.us/post/severity-multigroup/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="Aaron Caldwell">
+  <meta property="og:url" content="https://aaroncaldwell.us/post/severity-multigroup/">
+  <meta property="og:title" content="Increasing testing severity in multi-group designs | Aaron Caldwell">
+  <meta property="og:description" content="Introduction A little over a year ago Patrick Forscher wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:
+ Multi-group designs are the workhorse of scientific psychology. Multi-group designs apply to any grouping of people, within-person states, situations, or stimuli; interest typically centers around the either the means or conditional means within each group."><meta property="og:image" content="https://aaroncaldwell.us/media/logo.png">
+  <meta property="twitter:image" content="https://aaroncaldwell.us/media/logo.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2020-11-20T07:40:07-05:00">
+    
+    <meta property="article:modified_time" content="2020-11-20T07:40:07-05:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://aaroncaldwell.us/post/severity-multigroup/"
+  },
+  "headline": "Increasing testing severity in multi-group designs",
+  
+  "datePublished": "0001-01-01T00:00:00Z",
+  "dateModified": "2020-11-20T07:40:07-05:00",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Aaron Caldwell"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "Aaron Caldwell",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://aaroncaldwell.us/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "Introduction A little over a year ago Patrick Forscher wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:\n Multi-group designs are the workhorse of scientific psychology. Multi-group designs apply to any grouping of people, within-person states, situations, or stimuli; interest typically centers around the either the means or conditional means within each group."
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Increasing testing severity in multi-group designs | Aaron Caldwell</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="/js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">Aaron Caldwell</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">Aaron Caldwell</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Public Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  
+<div class="article-container pt-3">
+  <h1>Increasing testing severity in multi-group designs</h1>
+
+  
+
+  
+    
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+    
+    Fri, Nov 20, 2020
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    15 min read
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="/categories/r/">R</a>, <a href="/categories/statistics/">statistics</a></span>
+  
+
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>A little over a year ago Patrick Forscher wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:</p>
+<blockquote>
+<p>Multi-group designs are the workhorse of scientific psychology. Multi-group designs apply to any grouping of people, within-person states, situations, or stimuli; interest typically centers around the either the means or conditional means within each group. However, theory-testing using these means typically proceeds in just the way that Meehl criticized: scientists attempt to reject a null hypothesis of no group mean differences (which, due to Meehl’s “crud”, may be trivially false a priori), then follow up the rejected null hypothesis with tests intended to diagnose the pattern that produced the rejected null.</p>
+</blockquote>
+<p>I agree that this is systemic problem. People sometimes default to just plugging numbers into a one-way ANOVA and usually conclude that their hypothesis is confirmed simply by a significant ANOVA-level effect. Patrick’s proposed solution to the problem is <em>a priori</em> orthogonal contrasts. As a quick aside, I am always shocked at how few people know about orthogonal contrasts. This was drilled into my head by my statistics professors at Arkansas (Thank you Ronna Turner and Sean Mulvenon!). For more details on orthogonal contrasts (and experimental design altogether), I highly recommend purchasing a copy of <a href="https://designingexperiments.com/">“Designing Experiments and Analyzing Data”</a> by Maxwell, Delaney, and Kelley (2018). It covers this and numerous other topics; you won’t find a better value in a statistics textbook.</p>
+</div>
+<div id="r-code" class="section level1">
+<h1>R Code</h1>
+<p>Now I will go through the code in R for how to implement Patrick’s approach using the <code>afex</code> and <code>emmeans</code> package. For more details on <em>why</em> you should use this approach please read Patrick’s <a href="http://persistentastonishment.blogspot.com/2019/02/increasing-testing-severity-in-multi.html">blogpost</a>!</p>
+<div id="orthogonal-contrasts" class="section level2">
+<h2>Orthogonal Contrasts</h2>
+<p>There are many helper functions in R that make it easy to use orthogonal contrasts without having to write out the contrasts by hand. I will show these later but I quickly want to show a technique for checking your set of contrasts to ensure they are in fact orthogonal. Essentially, I have a function that takes the contrasts as matrix and calculates the cross-products of the matrix. If any off-diagonal element is not equal to zero then the contrasts are not orthogonal. Please note, that I made this function in ~2 minutes so I haven’t quite checked to ensure it works in all situations.</p>
+<pre class="r"><code># build function
+check_orthog = function(contrast_mat) {
+  check_off = crossprod(contrast_mat)
+  upper_check = sum(check_off*upper.tri(check_off))
+  lower_check = sum(check_off*lower.tri(check_off))
+  if (upper_check == 0 &amp;&amp; lower_check == 0) {
+    return(TRUE)
+  } else{
+    return(FALSE)
+  }
+}
+
+# Test with Patrick&#39;s code -- should print TRUE
+
+c1 &lt;- c(-1/2,0,1/2)
+c2 &lt;- c(1/3,-2/3,1/3)
+
+cons = cbind(c1,c2)
+
+check_orthog(cons)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code># Create non-orthogonal contrasts -- should print FALSE
+cons2 = cbind(c(-1,1,0),
+              c(0,-1,1),
+              c(-1,0,1))
+
+check_orthog(cons2)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code># Another way of coding orthogonal polynomial contrasts. 
+c1 &lt;- c(-1, 0, 1)
+c2 &lt;- c(0.5, -1, 0.5)
+
+cons3 &lt;- cbind(c1,c2)
+
+# Again should print TRUE
+check_orthog(cons3)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>I will use this at points in the blogpost just to check my own contrast coding (please email me if you notice a mistake!).</p>
+</div>
+<div id="generate-data" class="section level2">
+<h2>Generate Data</h2>
+<p>First, I will generate some data. Please note for this portion of the post I will be directly replicating/copying Patrick’s <a href="https://gist.github.com/schnarrd/f9b217a4eac09f3729d4e2011e04391d">data and code</a>.</p>
+<pre class="r"><code>library(tidyverse)
+library(afex)
+library(emmeans)
+library(broom)
+
+set.seed(432432) # For reproducibility
+
+# For all examples, I&#39;m using the below sampling error sd and n per cell
+err &lt;- 1
+n_per_cell &lt;- 200
+# I&#39;m also assuming the following:
+# (1) our smallest effect of substantive interest is .4
+# (2) all contrasts are Helment (successively compare one group to the average of the others)
+# (3) all contrasts are unit-weighted
+
+# This method should generalize to other orthogonal contrasts
+# The parameter estimates for unit-weighted Helmert contrasts, however, have a 
+# nice interpretation as a series of mean differences and are therefore easy to understand
+
+
+#### THREE GROUP ####
+
+# Ceofficients for this case. Modify as desired
+# First is the intercept, second is the focal contrast, remainder are the residual contrasts
+coefs &lt;- c(0, .7, .2)
+
+# Create the data
+# The last line creates the outcome using the coefficients above and the desired sampling error, err
+# %*% is matrix multiplication
+dat_three &lt;- data.frame(group = rep(paste(&quot;group&quot;, 1:3), n_per_cell))
+dat_three &lt;- mutate(
+  dat_three,
+  c1 = case_when(group == &quot;group 1&quot; ~ 2 / 3, TRUE ~ -1 /
+                   3),
+  c2 = case_when(group == &quot;group 1&quot; ~ 0, group == &quot;group 2&quot; ~ 1 /
+                   2, TRUE ~ -1 / 2),
+  outcome = as.vector(cbind(1, c1, c2) %*% coefs + rnorm(nrow(dat_three), sd =
+                                                           err))
+) %&gt;%
+  mutate(group = factor(group,
+                        levels = c(&quot;group 1&quot;,
+                                   &quot;group 2&quot;,
+                                   &quot;group 3&quot;),
+                        ordered = TRUE)) # creates and ordered &amp; labeled factor for group
+
+
+knitr::kable(head(dat_three),
+             caption = &quot;3-group data&quot;)</code></pre>
+<table>
+<caption><span id="tab:step1">Table 1: </span>3-group data</caption>
+<thead>
+<tr class="header">
+<th align="left">group</th>
+<th align="right">c1</th>
+<th align="right">c2</th>
+<th align="right">outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">group 1</td>
+<td align="right">0.6666667</td>
+<td align="right">0.0</td>
+<td align="right">0.1940993</td>
+</tr>
+<tr class="even">
+<td align="left">group 2</td>
+<td align="right">-0.3333333</td>
+<td align="right">0.5</td>
+<td align="right">-0.5684096</td>
+</tr>
+<tr class="odd">
+<td align="left">group 3</td>
+<td align="right">-0.3333333</td>
+<td align="right">-0.5</td>
+<td align="right">-0.3451584</td>
+</tr>
+<tr class="even">
+<td align="left">group 1</td>
+<td align="right">0.6666667</td>
+<td align="right">0.0</td>
+<td align="right">1.4218414</td>
+</tr>
+<tr class="odd">
+<td align="left">group 2</td>
+<td align="right">-0.3333333</td>
+<td align="right">0.5</td>
+<td align="right">0.2550905</td>
+</tr>
+<tr class="even">
+<td align="left">group 3</td>
+<td align="right">-0.3333333</td>
+<td align="right">-0.5</td>
+<td align="right">0.3534099</td>
+</tr>
+</tbody>
+</table>
+<p>Now, we have some data to work with. However, rather than simply using the <code>lm</code> function to make the contrast comparisons I will use <code>afex</code> to build the model and then <code>emmeans</code> to apply the specific contrasts.</p>
+</div>
+<div id="three-group-example" class="section level2">
+<h2>Three Group Example</h2>
+<p>In Patrick’s post he used the <code>lm</code> function to test the contrasts. I think this fine but may be difficult to understand for many beginners. Plus any addition comparisons will have to be made by creating a new model. This is why I prefer using <code>afex</code>: it has an easier to use interface and the model can be passed onto <code>emmeans</code> for specific additional comparisons. If Patrick’s approach works for you that is great, but I want to make sure people know of alternative approaches.</p>
+<pre class="r"><code># Patrick&#39;s Example
+m_three &lt;- lm(outcome ~ c1 + c2, data=dat_three)
+knitr::kable(tidy(m_three),
+             caption = &quot;3-group Contrasts using lm&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-1">Table 2: </span>3-group Contrasts using lm</caption>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">0.0437823</td>
+<td align="right">0.0417829</td>
+<td align="right">1.047853</td>
+<td align="right">0.2951303</td>
+</tr>
+<tr class="even">
+<td align="left">c1</td>
+<td align="right">0.6570966</td>
+<td align="right">0.0886348</td>
+<td align="right">7.413527</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">c2</td>
+<td align="right">0.1873883</td>
+<td align="right">0.1023467</td>
+<td align="right">1.830918</td>
+<td align="right">0.0676111</td>
+</tr>
+</tbody>
+</table>
+<p>Now, let us go through the same process with <code>afex</code> and <code>emmeans</code>. We will need to create an <code>id</code> column so that <code>afex</code> knows that these are all between-subject comparisons. I also like to have the partial eta squared (<span class="math inline">\(\eta^2\)</span>) for the default effect size output so I am also going to set this using the <code>afex_options</code> function.</p>
+<pre class="r"><code># Add subject id
+dat_three = rowid_to_column(dat_three, var = &quot;id&quot;)
+afex_options(es_aov = &quot;pes&quot;)</code></pre>
+<pre class="r"><code># Build model using afex; note we must have an error term &quot;(1|id)&quot;
+afex_three = afex::aov_4(outcome ~ group + (1|id),
+                         data = dat_three)</code></pre>
+<pre><code>## Contrasts set to contr.sum for the following variables: group</code></pre>
+<pre class="r"><code># Output tyical ANOVA table with type-3 SS
+knitr::kable(nice(afex_three))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Effect</th>
+<th align="left">df</th>
+<th align="left">MSE</th>
+<th align="left">F</th>
+<th align="left">pes</th>
+<th align="left">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">group</td>
+<td align="left">2, 597</td>
+<td align="left">1.05</td>
+<td align="left">29.16 ***</td>
+<td align="left">.089</td>
+<td align="left">&lt;.001</td>
+</tr>
+</tbody>
+</table>
+<p>Most people reading this should be familiar with the table above. It is a simple one-way ANOVA output.</p>
+<p>Now I can make the same comparisons Patrick made with <code>lm</code> using <code>emmeans</code>. However, I can also make my tests directionl using the <code>side</code> argument in the <code>contrast</code> function.</p>
+<pre class="r"><code># Now get emmeans
+emm_three = emmeans(afex_three, ~group)
+
+# Estimated marginal means
+knitr::kable(tidy(emm_three) %&gt;%
+               select(-df,-statistic,-p.value))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">group</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">group 1</td>
+<td align="right">0.4818467</td>
+<td align="right">0.07237</td>
+</tr>
+<tr class="even">
+<td align="left">group 2</td>
+<td align="right">-0.0815557</td>
+<td align="right">0.07237</td>
+</tr>
+<tr class="odd">
+<td align="left">group 3</td>
+<td align="right">-0.2689441</td>
+<td align="right">0.07237</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># Create orthogonal contrasts
+con_three = list(c1 = c(1,-.5,-.5),
+                 c2 = c(0,1,-1))
+check_orthog(cbind(con_three$c1,
+                   con_three$c2))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code># Make comparisons with contrast function
+knitr::kable(contrast(emm_three,con_three),
+             caption = &quot;3-group emmeans contrasts&quot;)</code></pre>
+<table>
+<caption><span id="tab:threegroupemm">Table 3: </span>3-group emmeans contrasts</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">c1</td>
+<td align="right">0.6570966</td>
+<td align="right">0.0886348</td>
+<td align="right">597</td>
+<td align="right">7.413527</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">c2</td>
+<td align="right">0.1873883</td>
+<td align="right">0.1023467</td>
+<td align="right">597</td>
+<td align="right">1.830918</td>
+<td align="right">0.0676111</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(contrast(emm_three,con_three,
+                      side = &quot;&gt;&quot;),
+             caption = &quot;3-group emmeans w/ directional contrasts&quot;)</code></pre>
+<table>
+<caption><span id="tab:threegroupemm">Table 3: </span>3-group emmeans w/ directional contrasts</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">c1</td>
+<td align="right">0.6570966</td>
+<td align="right">0.0886348</td>
+<td align="right">597</td>
+<td align="right">7.413527</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">c2</td>
+<td align="right">0.1873883</td>
+<td align="right">0.1023467</td>
+<td align="right">597</td>
+<td align="right">1.830918</td>
+<td align="right">0.0338055</td>
+</tr>
+</tbody>
+</table>
+<p>Patrick also mentions that we would want to perform equivalence tests to rule out that the differences are within our equivalence bounds (answers the question “Are these contrast differences, if they exist, smaller than what we consider meaningful?”). Remember, <code>c1</code> is “group 1 - group 2 &amp; group 3” and c2 is “group 2 - group 3”.</p>
+<pre class="r"><code># Create contrast
+con_three_eq = contrast(emm_three,con_three) 
+# Perform equivalence test (takes absolute difference)
+test_three_eq = test(con_three_eq,
+                     delta = .4, # eq bound
+                     side = &quot;equivalence&quot;)
+knitr::kable(test_three_eq,
+             caption = &quot;Equivalence Tests for 3-group example&quot;)</code></pre>
+<table>
+<caption><span id="tab:threegroupequ">Table 4: </span>Equivalence Tests for 3-group example</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">c1</td>
+<td align="right">0.6570966</td>
+<td align="right">0.0886348</td>
+<td align="right">597</td>
+<td align="right">2.900628</td>
+<td align="right">0.9980694</td>
+</tr>
+<tr class="even">
+<td align="left">c2</td>
+<td align="right">0.1873883</td>
+<td align="right">0.1023467</td>
+<td align="right">597</td>
+<td align="right">-2.077368</td>
+<td align="right">0.0190973</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="four-group-example" class="section level2">
+<h2>Four Group Example</h2>
+<p>Again, we will need to generate the same data that Patrick did in his post.</p>
+<pre class="r"><code>#### FOUR GROUP ####
+
+# Ceofficients for this case. Modify as desired
+# First is the intercept, second is the focal contrast, remainder are the residual contrasts
+coefs &lt;- c(0, .7, .2, .1)
+
+# Create the data
+# The last line creates the outcome using the coefficients above and the desired sampling error, err
+# %*% is matrix multiplication
+dat_four &lt;- data.frame(group = rep(paste(&quot;group&quot;, 1:4), 
+                                   n_per_cell))
+dat_four &lt;- mutate(
+  dat_four,
+  c1 = case_when(group == &quot;group 1&quot; ~ -3 / 4, TRUE ~ 1 /
+                   4),
+  c2 = case_when(group == &quot;group 1&quot; ~ 0, 
+                 group == &quot;group 2&quot; ~ 2 /
+                   3, TRUE ~ -1 / 3),
+  c3 = case_when(
+    group %in% c(&quot;group 1&quot;, &quot;group 2&quot;) ~ 0,
+    group == &quot;group 3&quot; ~ 1 / 2,
+    TRUE ~ -1 / 2
+  ),
+  outcome = as.vector(cbind(1, 
+                            c1,
+                            c2, 
+                            c3) %*% coefs + rnorm(nrow(dat_four), 
+                                                  sd = err))
+) %&gt;%
+  mutate(group = factor(
+    group,
+    levels = c(&quot;group 1&quot;,
+               &quot;group 2&quot;,
+               &quot;group 3&quot;,
+               &quot;group 4&quot;),
+    ordered = TRUE
+  )) %&gt;% # creates and ordered &amp; labeled factor for group
+rowid_to_column(var = &quot;id&quot;)
+
+knitr::kable(head(dat_four),
+             caption = &quot;4-Groups Data&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-4">Table 5: </span>4-Groups Data</caption>
+<thead>
+<tr class="header">
+<th align="right">id</th>
+<th align="left">group</th>
+<th align="right">c1</th>
+<th align="right">c2</th>
+<th align="right">c3</th>
+<th align="right">outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">group 1</td>
+<td align="right">-0.75</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0</td>
+<td align="right">-0.6004404</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">group 2</td>
+<td align="right">0.25</td>
+<td align="right">0.6666667</td>
+<td align="right">0.0</td>
+<td align="right">1.4770844</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">group 3</td>
+<td align="right">0.25</td>
+<td align="right">-0.3333333</td>
+<td align="right">0.5</td>
+<td align="right">2.2156623</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">group 4</td>
+<td align="right">0.25</td>
+<td align="right">-0.3333333</td>
+<td align="right">-0.5</td>
+<td align="right">-0.1881092</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="left">group 1</td>
+<td align="right">-0.75</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0</td>
+<td align="right">0.4617127</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="left">group 2</td>
+<td align="right">0.25</td>
+<td align="right">0.6666667</td>
+<td align="right">0.0</td>
+<td align="right">0.0611009</td>
+</tr>
+</tbody>
+</table>
+<p>Now, we replicate the process to build our base model.</p>
+<pre class="r"><code># Build model using afex; note we must have an error term &quot;(1|id)&quot;
+afex_four = afex::aov_4(outcome ~ group + (1|id),
+                         data = dat_four)</code></pre>
+<pre><code>## Contrasts set to contr.sum for the following variables: group</code></pre>
+<pre class="r"><code># Output tyical ANOVA table with type-3 SS
+knitr::kable(nice(afex_four),
+             caption = &quot;ANOVA: Four Groups&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-5">Table 6: </span>ANOVA: Four Groups</caption>
+<thead>
+<tr class="header">
+<th align="left">Effect</th>
+<th align="left">df</th>
+<th align="left">MSE</th>
+<th align="left">F</th>
+<th align="left">pes</th>
+<th align="left">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">group</td>
+<td align="left">3, 796</td>
+<td align="left">1.02</td>
+<td align="left">25.52 ***</td>
+<td align="left">.088</td>
+<td align="left">&lt;.001</td>
+</tr>
+</tbody>
+</table>
+<p>And, we can then pass on this model to the <code>emmeans</code> function to make our specific contrasts.</p>
+<pre class="r"><code># Now get emmeans
+emm_four = emmeans(afex_four, ~group,
+                   adjust = &quot;none&quot;)
+
+# Estimated marginal means
+knitr::kable(tidy(emm_four) %&gt;%
+               select(-df,-statistic,-p.value))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">group</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">group 1</td>
+<td align="right">-0.5275826</td>
+<td align="right">0.0714616</td>
+</tr>
+<tr class="even">
+<td align="left">group 2</td>
+<td align="right">0.3089254</td>
+<td align="right">0.0714616</td>
+</tr>
+<tr class="odd">
+<td align="left">group 3</td>
+<td align="right">0.1323786</td>
+<td align="right">0.0714616</td>
+</tr>
+<tr class="even">
+<td align="left">group 4</td>
+<td align="right">0.0253503</td>
+<td align="right">0.0714616</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># Create orthogonal contrasts
+con_four = list(c1 = c(1,-1/3,-1/3,-1/3),
+                c2 = c(0,1,-0.5,-0.5),
+                c3 = c(0,0,.5,-.5))
+check_orthog(cbind(con_four$c1,
+                   con_four$c2,
+                   con_four$c3))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code># Perform joint test
+knitr::kable(test(contrast(emm_four,
+                           con_four[2:3]),
+                  joint = TRUE),
+             caption = &quot;Joint Test of Residual Contrasts&quot;)</code></pre>
+<table>
+<caption><span id="tab:fourgroupemm">Table 7: </span>Joint Test of Residual Contrasts</caption>
+<thead>
+<tr class="header">
+<th align="right">df1</th>
+<th align="right">df2</th>
+<th align="right">F.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+<td align="right">796</td>
+<td align="right">4.016</td>
+<td align="right">0.0183995</td>
+</tr>
+</tbody>
+</table>
+<p>We start by performing “joint test” of the residual hypotheses (Note: <code>c1</code> is the focal hypothesis so we only include <code>c2</code> and <code>c3</code>). Now, we observed that our residual contrasts actually account for a significant portion of the variance.</p>
+<p>So, we can perform equivalence testing for these contrasts. We find that <code>c2</code> and <code>c3</code> are within our equivalence bounds.</p>
+<pre class="r"><code># Make comparisons with contrast function
+knitr::kable(test(contrast(emm_four,
+                           con_four),
+                  delta = .4,
+                  side = &quot;equivalence&quot;),
+             caption = &quot;4-group equivalence contrasts&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-6">Table 8: </span>4-group equivalence contrasts</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">c1</td>
+<td align="right">-0.6831340</td>
+<td align="right">0.0825167</td>
+<td align="right">796</td>
+<td align="right">3.431233</td>
+<td align="right">0.9996841</td>
+</tr>
+<tr class="even">
+<td align="left">c2</td>
+<td align="right">0.2300610</td>
+<td align="right">0.0875222</td>
+<td align="right">796</td>
+<td align="right">-1.941668</td>
+<td align="right">0.0262649</td>
+</tr>
+<tr class="odd">
+<td align="left">c3</td>
+<td align="right">0.0535141</td>
+<td align="right">0.0505310</td>
+<td align="right">796</td>
+<td align="right">-6.856903</td>
+<td align="right">0.0000000</td>
+</tr>
+</tbody>
+</table>
+<p>Then, we can finally test focal hypothesis <code>c1</code>.</p>
+<pre class="r"><code>knitr::kable(tidy(contrast(emm_four,con_four[1])),
+             caption = &quot;4-group: c1 contrast&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-7">Table 9: </span>4-group: c1 contrast</caption>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="left">contrast</th>
+<th align="right">null.value</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">df</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">group</td>
+<td align="left">c1</td>
+<td align="right">0</td>
+<td align="right">-0.683134</td>
+<td align="right">0.0825167</td>
+<td align="right">796</td>
+<td align="right">-8.278736</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>From these results Patrick concludes the following (and I agree).</p>
+<blockquote>
+<p>In this case, although the deviation from the focal contrast is significantly different from zero, we can say that the amount of deviation is smaller than our threshold for what constitutes a meaningful effect. If we think that any deviation from the focal contrast is reason for concern, we might think about amending our theory. If, on the other hand, we believe that the null hypothesis of no relationship is basically always false and that many of these non-zero relationships are “crud”, we might advance the claim that our theory has been corroborated. In either case our testing procedure is more severe than a mere test of the null hypothesis of no differences between group means.</p>
+</blockquote>
+<p>Another way of saying this is the following: despite the data being incompatibility with the focal contrast (evidenced by the joint test), the differences observed in these other contrasts is small or within the established equivalence bounds. Meanwhile, we can reject the null hypothesis that our focal contrast is zero.</p>
+</div>
+</div>
+<div id="extension-to-multilevelhierarchical-models" class="section level1">
+<h1>Extension to Multilevel/Hierarchical Models</h1>
+<p>In many cases, the designs that Patrick laid out are as simple or clean as a 3-group one-way ANOVA. Very often we have multiple levels of variance we would like to take into account. The most common example, and one I will repeat here, is in education wherein we have students inside classes within schools. In addition, we often have covariates that (like gender, socioecononimc status, or age) and we need to include those in our models.</p>
+<p>So, I will apply Patrick’s approach to a study where we have test scores on students within classes within schools. We also have informative covariates such as age and gender on the test scores. Let us say we are testing the hypothesis that our intended treatments (groups 2 and 3) will have a positive effect, <em>and</em> there will be an additional benefit for treatment group 3. Therefore, we will have similar contrasts to the original 3-group example except we will reverse the coding <em>and</em> only have one-sided tests because I specified directional hypotheses.</p>
+<pre class="r"><code>library(simstudy)
+# taken from https://kgoldfeld.github.io/simstudy/articles/clustered.html
+gen.school &lt;- defData(
+  varname = &quot;s0&quot;,
+  dist = &quot;normal&quot;,
+  formula = 0,
+  variance = 3,
+  id = &quot;idSchool&quot;
+)
+gen.school &lt;- defData(gen.school,
+                      varname = &quot;nClasses&quot;,
+                      dist = &quot;noZeroPoisson&quot;,
+                      formula = 3)
+
+set.seed(282721)
+
+dtSchool &lt;- genData(8, gen.school)
+dtSchool &lt;- trtAssign(dtSchool, nTrt = 3)
+
+gen.class &lt;-
+  defDataAdd(
+    varname = &quot;c0&quot;,
+    dist = &quot;normal&quot;,
+    formula = 0,
+    variance = 2
+  )
+gen.class &lt;-
+  defDataAdd(gen.class,
+             varname = &quot;nStudents&quot;,
+             dist = &quot;noZeroPoisson&quot;,
+             formula = 20)
+
+dtClass &lt;-
+  genCluster(dtSchool,
+             &quot;idSchool&quot;,
+             numIndsVar = &quot;nClasses&quot;,
+             level1ID = &quot;idClass&quot;)
+dtClass &lt;- addColumns(gen.class, dtClass) %&gt;%
+  mutate(t2 = ifelse(trtGrp == 2, 1, 0),
+         t3 = ifelse(trtGrp == 3, 1, 0))
+  
+
+gen.student &lt;- defDataAdd(varname = &quot;Male&quot;,
+                          dist = &quot;binary&quot;,
+                          formula = 0.5)
+gen.student &lt;-
+  defDataAdd(gen.student,
+             varname = &quot;age&quot;,
+             dist = &quot;uniform&quot;,
+             formula = &quot;9.5; 10.5&quot;)
+gen.student &lt;-
+  defDataAdd(
+    gen.student,
+    varname = &quot;test&quot;,
+    dist = &quot;normal&quot;,
+    formula = &quot;50 - 2*Male + s0 + c0 + 4 * t2 + 12 * t3&quot;,
+    variance = 2
+  )
+dtStudent &lt;-
+  genCluster(
+    dtClass,
+    cLevelVar = &quot;idClass&quot;,
+    numIndsVar = &quot;nStudents&quot;,
+    level1ID = &quot;idChild&quot;
+  )
+
+con_three = list(c1 = c(-1,.5,.5),
+                 c2 = c(0,1,-1))
+check_orthog(cbind(con_three$c1,
+                   con_three$c2))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>dat_mlm &lt;- addColumns(gen.student, dtStudent) %&gt;%
+  select(-s0,-c0,-t2,-t3) %&gt;%
+  mutate(trtGrp = factor(trtGrp,
+                         levels = c(1,2,3),
+                         ordered = TRUE))</code></pre>
+<p>Now we can utilize the <code>lme4</code> package to build the mlm and use <code>emmeans</code> plot function to take a glimpse at the difference between groups.</p>
+<pre class="r"><code>test_mlm = lme4::lmer(test ~ Male + trtGrp + (1|idClass:idSchool) + (1|idSchool),
+                      data = dat_mlm)
+knitr::kable(broom.mixed::tidy(test_mlm),
+             caption = &quot;Summary Table of MLM&quot;)</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;broom.mixed&#39;:
+##   method      from 
+##   tidy.gamlss broom</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-9">Table 10: </span>Summary Table of MLM</caption>
+<thead>
+<tr class="header">
+<th align="left">effect</th>
+<th align="left">group</th>
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">statistic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">fixed</td>
+<td align="left">NA</td>
+<td align="left">(Intercept)</td>
+<td align="right">55.9993351</td>
+<td align="right">0.5561662</td>
+<td align="right">100.688138</td>
+</tr>
+<tr class="even">
+<td align="left">fixed</td>
+<td align="left">NA</td>
+<td align="left">Male</td>
+<td align="right">-1.7990154</td>
+<td align="right">0.1491026</td>
+<td align="right">-12.065621</td>
+</tr>
+<tr class="odd">
+<td align="left">fixed</td>
+<td align="left">NA</td>
+<td align="left">trtGrp.L</td>
+<td align="right">7.6402443</td>
+<td align="right">0.7468733</td>
+<td align="right">10.229640</td>
+</tr>
+<tr class="even">
+<td align="left">fixed</td>
+<td align="left">NA</td>
+<td align="left">trtGrp.Q</td>
+<td align="right">2.0859008</td>
+<td align="right">1.1211914</td>
+<td align="right">1.860432</td>
+</tr>
+<tr class="odd">
+<td align="left">ran_pars</td>
+<td align="left">idClass:idSchool</td>
+<td align="left">sd__(Intercept)</td>
+<td align="right">1.4617520</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td align="left">ran_pars</td>
+<td align="left">idSchool</td>
+<td align="left">sd__(Intercept)</td>
+<td align="right">0.9791225</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">ran_pars</td>
+<td align="left">Residual</td>
+<td align="left">sd__Observation</td>
+<td align="right">1.5290580</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># Plot estimated differences between treatments
+emm_mlm = emmeans(test_mlm, ~ trtGrp)
+plot(emm_mlm)</code></pre>
+<p><img src="/post/2020-11-20-severity-multigroup.en_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Finally, we can apply <code>emmeans</code> to look at the our specific contrasts. For these multi-level models <code>emmeans</code> defaults to Kenword-Roger degrees of freedom.</p>
+<pre class="r"><code>con_mlm = list(c1 = c(-1,.5,.5),
+                 c2 = c(0,-1,1))
+check_orthog(cbind(con_mlm$c1,
+                   con_mlm$c2))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>knitr::kable(test(contrast(emm_mlm, con_mlm),
+                  side = &quot;&gt;&quot;))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">c1</td>
+<td align="right">6.826355</td>
+<td align="right">1.030733</td>
+<td align="right">5.934995</td>
+<td align="right">6.622817</td>
+<td align="right">0.0002986</td>
+</tr>
+<tr class="even">
+<td align="left">c2</td>
+<td align="right">7.957165</td>
+<td align="right">1.489940</td>
+<td align="right">10.030437</td>
+<td align="right">5.340594</td>
+<td align="right">0.0001623</td>
+</tr>
+</tbody>
+</table>
+<p>We see that our data is incompatible with the null hypotheses. We may also want to include <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5898747/">“conditional equivalence tests”</a> to ensure that our effects are not within a range we deem practically equivalent. Therefore, we can use almost the same code as the chunk above but add a <code>delta</code> argument as well as change the <code>side</code> argument to “equivalent”.</p>
+<pre class="r"><code>knitr::kable(test(contrast(emm_mlm, con_mlm),
+                  delta = 2,
+                  side = &quot;equivalent&quot;))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">c1</td>
+<td align="right">6.826355</td>
+<td align="right">1.030733</td>
+<td align="right">5.934995</td>
+<td align="right">4.682450</td>
+<td align="right">0.9982574</td>
+</tr>
+<tr class="even">
+<td align="left">c2</td>
+<td align="right">7.957165</td>
+<td align="right">1.489940</td>
+<td align="right">10.030437</td>
+<td align="right">3.998258</td>
+<td align="right">0.9987449</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="conclusion" class="section level1">
+<h1>Conclusion</h1>
+<p>As you can see the process of creating specific contrasts is fairly straightforward in R and the hypothesis testing procedures are simplified by using the <code>emmeans</code> package. I find contrast coding to be a refreshing alternative to the typical inspection of “ANOVA-level” effects that is often followed up pairwise comparisions between the levels of a factor where there is a significant effect. Instead, contrast coding demands that the user be specific in their hypotheses. As Patrick notes in his blog post, specifying these contrasts <em>a priori</em> in many cases may result in a more severe tests of your hypotheses which arguably increases the strength of your claims if your experiments support your hypotheses. In my opinion there is added advantage in how you can go about describign your results (no need for the mundane langauge about “significant main effects”). Also, orthogonal contrasts, by nature, do not require adjustments for multiplicity and therefore may be more statistical powerful than default ANOVA tests. I’ll admit that orthogonal contrasts are not a silver bullet (there is no free lunch in statistics), but I do believe there many experiments that would benefit from this type of analysis.</p>
+<div id="miscellaneous-notes" class="section level2">
+<h2>Miscellaneous Notes</h2>
+<p>There are other ways to code contrasts. This post by Rose Maier notes a way of performing contrasts with the <code>summary</code> function.
+<a href="https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html" class="uri">https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html</a></p>
+</div>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="/tags/r/">R</a>
+  
+  <a class="badge badge-light" href="/tags/statistics/">statistics</a>
+  
+  <a class="badge badge-light" href="/tags/hypothesis-testing/">hypothesis testing</a>
+  
+  <a class="badge badge-light" href="/tags/polynomial/">polynomial</a>
+  
+  <a class="badge badge-light" href="/tags/contrasts/">contrasts</a>
+  
+  <a class="badge badge-light" href="/tags/emmeans/">emmeans</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=https://aaroncaldwell.us/post/severity-multigroup/&amp;text=Increasing%20testing%20severity%20in%20multi-group%20designs" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=https://aaroncaldwell.us/post/severity-multigroup/&amp;t=Increasing%20testing%20severity%20in%20multi-group%20designs" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=Increasing%20testing%20severity%20in%20multi-group%20designs&amp;body=https://aaroncaldwell.us/post/severity-multigroup/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=https://aaroncaldwell.us/post/severity-multigroup/&amp;title=Increasing%20testing%20severity%20in%20multi-group%20designs" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=Increasing%20testing%20severity%20in%20multi-group%20designs%20https://aaroncaldwell.us/post/severity-multigroup/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=https://aaroncaldwell.us/post/severity-multigroup/&amp;title=Increasing%20testing%20severity%20in%20multi-group%20designs" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js" integrity="sha512-7t8APmYpzEsZP7CYoA7RfMPV9Bb+PJHa9x2WiUnDXZx3XHveuyWUtvNOexhkierl5flZ3tr92dP1mMS+SGlD+A==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/js/academic.min.f6ecf7692215f2bc4850b72c8176bfa2.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic Website Builder</a>
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

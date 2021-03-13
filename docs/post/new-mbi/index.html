@@ -1,0 +1,2341 @@
+<!DOCTYPE html><html lang="en-us" >
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 4.8.0">
+
+  
+
+  
+  
+
+  
+  
+  
+  
+  
+    
+    
+    
+  
+  
+
+  
+
+  
+  
+  
+    
+  
+  <meta name="description" content="Updated on: 2020-05-05
+Introduction There have been a number of criticisms of “magnitude-based inferences” (Batterham and Hopkins 2006) which is a unique approach to statistics in the sport and exercise science community. As an author of the mbir package (Peterson and Caldwell 2019), I have been watching this all develop closely. What is clear from the criticisms is that MBI has some fatal flaws directly related to the sample size estimations and the interpretations of the probabilities that the MBI spreadsheets provide (Lohse et al.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://aaroncaldwell.us/post/new-mbi/">
+
+  
+
+
+  
+  
+  
+  <meta name="theme-color" content="#3f51b5">
+  
+
+  
+  
+  
+  <script src="/js/mathjax-config.js"></script>
+  
+
+  
+  
+  
+  
+    
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css" integrity="sha256-FMvZuGapsJLjouA6k7Eo2lusoAX9i0ShlWFG6qt7SLc=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css" integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/github.min.css" crossorigin="anonymous" title="hl-light">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/dracula.min.css" crossorigin="anonymous" title="hl-dark" disabled>
+        
+      
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css" integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin="anonymous">
+    
+
+    
+
+    
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js" integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+    
+      
+
+      
+      
+
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" integrity="" crossorigin="anonymous" async></script>
+      
+    
+      
+
+      
+      
+
+      
+    
+
+  
+
+  
+  
+  
+    
+      
+      
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat:400,700%7CRoboto:400,400italic,700%7CRoboto+Mono&display=swap">
+    
+  
+
+  
+  
+  
+  
+  <link rel="stylesheet" href="/css/academic.css">
+
+  
+
+
+
+
+  
+
+
+  
+  
+
+  
+
+  <link rel="manifest" href="/index.webmanifest">
+  <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
+  <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
+
+  <link rel="canonical" href="https://aaroncaldwell.us/post/new-mbi/">
+
+  
+  
+  
+  
+  
+  
+  
+    
+  
+  
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="Aaron Caldwell">
+  <meta property="og:url" content="https://aaroncaldwell.us/post/new-mbi/">
+  <meta property="og:title" content="Magnitude Based Inference in R and SAS | Aaron Caldwell">
+  <meta property="og:description" content="Updated on: 2020-05-05
+Introduction There have been a number of criticisms of “magnitude-based inferences” (Batterham and Hopkins 2006) which is a unique approach to statistics in the sport and exercise science community. As an author of the mbir package (Peterson and Caldwell 2019), I have been watching this all develop closely. What is clear from the criticisms is that MBI has some fatal flaws directly related to the sample size estimations and the interpretations of the probabilities that the MBI spreadsheets provide (Lohse et al."><meta property="og:image" content="https://aaroncaldwell.us/media/logo.png">
+  <meta property="twitter:image" content="https://aaroncaldwell.us/media/logo.png"><meta property="og:locale" content="en-us">
+  
+    
+      <meta property="article:published_time" content="2020-05-04T00:00:00&#43;00:00">
+    
+    <meta property="article:modified_time" content="2020-05-04T16:16:58-04:00">
+  
+
+  
+
+
+    
+
+
+
+
+
+
+  
+
+
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://aaroncaldwell.us/post/new-mbi/"
+  },
+  "headline": "Magnitude Based Inference in R and SAS",
+  
+  "datePublished": "2020-05-04T00:00:00Z",
+  "dateModified": "2020-05-04T16:16:58-04:00",
+  
+  "author": {
+    "@type": "Person",
+    "name": "Aaron Caldwell"
+  },
+  
+  "publisher": {
+    "@type": "Organization",
+    "name": "Aaron Caldwell",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://aaroncaldwell.us/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
+    }
+  },
+  "description": "Updated on: 2020-05-05\nIntroduction There have been a number of criticisms of “magnitude-based inferences” (Batterham and Hopkins 2006) which is a unique approach to statistics in the sport and exercise science community. As an author of the mbir package (Peterson and Caldwell 2019), I have been watching this all develop closely. What is clear from the criticisms is that MBI has some fatal flaws directly related to the sample size estimations and the interpretations of the probabilities that the MBI spreadsheets provide (Lohse et al."
+}
+</script>
+
+  
+
+  
+
+
+  
+
+
+  
+
+
+
+
+
+  <title>Magnitude Based Inference in R and SAS | Aaron Caldwell</title>
+
+</head>
+
+
+<body id="top" data-spy="scroll" data-offset="70" data-target="#TableOfContents" class=" ">
+
+  
+  
+  
+    <script>const isSiteThemeDark = false;</script>
+  
+  
+  <script src="/js/load-theme.js"></script>
+
+  <aside class="search-results" id="search">
+  <div class="container">
+    <section class="search-header">
+
+      <div class="row no-gutters justify-content-between mb-3">
+        <div class="col-6">
+          <h1>Search</h1>
+        </div>
+        <div class="col-6 col-search-close">
+          <a class="js-search" href="#"><i class="fas fa-times-circle text-muted" aria-hidden="true"></i></a>
+        </div>
+      </div>
+
+      <div id="search-box">
+        
+        <input name="q" id="search-query" placeholder="Search..." autocapitalize="off"
+        autocomplete="off" autocorrect="off" spellcheck="false" type="search" class="form-control">
+        
+      </div>
+
+    </section>
+    <section class="section-search-results">
+
+      <div id="search-hits">
+        
+      </div>
+
+    </section>
+  </div>
+</aside>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+<nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="d-none d-lg-inline-flex">
+      <a class="navbar-brand" href="/">Aaron Caldwell</a>
+    </div>
+    
+
+    
+    <button type="button" class="navbar-toggler" data-toggle="collapse"
+            data-target="#navbar-content" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span><i class="fas fa-bars"></i></span>
+    </button>
+    
+
+    
+    <div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none">
+      <a class="navbar-brand" href="/">Aaron Caldwell</a>
+    </div>
+    
+
+    
+    
+    <div class="navbar-collapse main-menu-item collapse justify-content-start" id="navbar-content">
+
+      
+      <ul class="navbar-nav d-md-inline-flex">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#about"><span>Home</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#posts"><span>Posts</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#projects"><span>Public Projects</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#featured"><span>Publications</span></a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        
+
+        
+        
+        
+        
+
+        
+          
+            
+            
+          
+          
+            
+            
+            
+              
+            
+            
+          
+        
+
+        <li class="nav-item">
+          <a class="nav-link " href="/#contact"><span>Contact</span></a>
+        </li>
+
+        
+        
+
+      
+
+        
+      </ul>
+    </div>
+
+    <ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2">
+      
+      <li class="nav-item">
+        <a class="nav-link js-search" href="#" aria-label="Search"><i class="fas fa-search" aria-hidden="true"></i></a>
+      </li>
+      
+
+      
+      <li class="nav-item dropdown theme-dropdown">
+        <a href="#" class="nav-link js-theme-selector" data-toggle="dropdown" aria-haspopup="true">
+          <i class="fas fa-palette" aria-hidden="true"></i>
+        </a>
+        <div class="dropdown-menu">
+          <a href="#" class="dropdown-item js-set-theme-light">
+            <span>Light</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-dark">
+            <span>Dark</span>
+          </a>
+          <a href="#" class="dropdown-item js-set-theme-auto">
+            <span>Automatic</span>
+          </a>
+        </div>
+      </li>
+      
+
+      
+
+    </ul>
+
+  </div>
+</nav>
+
+
+
+  <article class="article">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  
+  
+<div class="article-container pt-3">
+  <h1>Magnitude Based Inference in R and SAS</h1>
+
+  
+  <p class="page-subtitle">Using equivalence, non-inferiority, and minimal effects testing</p>
+  
+
+  
+    
+
+
+<div class="article-metadata">
+
+  
+  
+
+  
+  <span class="article-date">
+    
+    
+      
+          Last updated on
+      
+    
+    Mon, May 4, 2020
+  </span>
+  
+
+  
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    24 min read
+  </span>
+  
+
+  
+  
+  
+
+  
+  
+  <span class="middot-divider"></span>
+  <span class="article-categories">
+    <i class="fas fa-folder mr-1"></i><a href="/categories/r/">R</a>, <a href="/categories/statistics/">statistics</a>, <a href="/categories/sas/">SAS</a></span>
+  
+
+</div>
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+</div>
+
+
+
+  <div class="article-container">
+
+    <div class="article-style">
+      
+
+
+<p>Updated on: 2020-05-05</p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>There have been a number of criticisms of “magnitude-based inferences” <span class="citation">(Batterham and Hopkins 2006)</span> which is a unique approach to statistics in the sport and exercise science community. As an author of the <code>mbir</code> package <span class="citation">(Peterson and Caldwell 2019)</span>, I have been watching this all develop closely. What is clear from the criticisms is that MBI has some fatal flaws directly related to the sample size estimations and the interpretations of the probabilities that the MBI spreadsheets provide <span class="citation">(Lohse et al. 2020; Sainani et al. 2019; Sainani 2018)</span>. One of my motivations for helping make <code>mbir</code> was to ensure there was version control of this technique, and that any changes to MBI would be well-documented. Now is the time for changes, and in this short post I will document how apply MBI in a frequentist hypothesis testing framework. The statistical reasoning behind this approach has been outlined in detail by <span class="citation">Aisbett, Lakens, and Sainani (2020)</span>. I was lucky enough to provide feedback on an earlier version of this manuscript and it inspired me to write this blog post. Changes to <code>mbir</code> will hopefully come soon once Kyle and I agree upon the appropriate path forward for the package (we may add Bayesian options as well). In this document, I will detail how to implement the approach of <span class="citation">Aisbett, Lakens, and Sainani (2020)</span> in R and SAS. My hope is that with these details sport and exercise scientists can do three things: 1) go beyond relying entirely on ‘significance’, 2) avoid the pitfalls of the “old” MBI, and 3) apply analyses that have been well-documented in the statistics literature.</p>
+<div id="note-of-caution" class="section level2">
+<h2>Note of caution</h2>
+<p>This blog post implicitly assumes researchers are interested in <em>testing hypotheses</em>.
+This is often not the case for many sport scientists.
+Researchers may simply want to <em>estimate</em> the magnitude an effect, or may be using inferential statistics as descriptions of the data <span class="citation">(Chow and Greenland 2019; Greenland and Chow 2019; Amrhein, Trafimow, and Greenland 2019)</span>.
+Personally, I have no problem with these approaches and would highly recommend the <code>concurve</code> R package as a visualization tool if that is your intention <span class="citation">(Rafi and Vigotsky 2020)</span>.</p>
+</div>
+</div>
+<div id="the-basic-concepts" class="section level1">
+<h1>The Basic Concepts</h1>
+<p>For those of you that have not read <span class="citation">Aisbett, Lakens, and Sainani (2020)</span>, I will quickly detail what their approach entails. The primary point of their paper is that MBI can be described as combination of two one-sided tests (TOST) for equivalence testing and minimal effects tests (MET). The difference between this approach and the old MBI approach is that now researchers will have to establish an <em>a priori</em> alpha-level, a smallest effect size of interest (SESOI), and justify their sample size on the basis of statistical power. In this format, we must explicitly test hypotheses and remove references to effects being “likely or very likely” or “unclear”, but rather state whether the data is “compatible, inconclusive, or ambiguous” depending on the result (See Table 6 of Aisbett, Lakens, &amp; Sainani 2020). There are other more specific recommendations (such as the removal of the odds ratio calculations), and I highly recommend everyone read <span class="citation">Aisbett, Lakens, and Sainani (2020)</span> for more details.</p>
+<div id="terminology" class="section level2">
+<h2>Terminology</h2>
+<p><strong>Equivalence Testing</strong> is a procedure designed to test whether an effect is contained within an equivalence bound. Many people may be familiar with equivalence testing from using TOST <span class="citation">(D. Lakens, Scheel, and Isager 2018a)</span>. This establishes a null hypothesis that the effect is greater, or less, than the equivalence bound, and the alternative would be that the effect is within the equivalence bound.</p>
+<p><strong>Minimal Effects Testing</strong> (MET) is a test to determine whether an effect is large enough to be considered meaningful. In contrast to equivalence testing, a null hypothesis in MET is that the effect is less than an minimal effects bound and the alternative would be that the effect is greater than the bound.</p>
+<p><strong>Non-Inferiority Testing</strong> is a test of whether is <em>not worse</em> than a inferiority margin. For example, this is commonly used in bio-pharmaceutical trials where a new, typically cheaper, drug is being introduced and the study is completed simply to show it does not perform worse than the existing option(s).</p>
+<p>To visualize what these new terms mean, take a look at Figure 1 adapted from <span class="citation">D. Lakens, Scheel, and Isager (2018b)</span>. A Bayesian interpreation of this can also be found in a recent manuscript from <span class="citation">Ravenzwaaij et al. (2019)</span>. In essence, we have 2 sets of tests that MBI is using “under-the-hood” when calculating the percentages for each effect. For mechanistic MBI, the “decisions” are made using a combination of TOST &amp; MET. For clinical MBI, the “decisions” are made with a combination of MET and a non-inferiority test with, most likely, <em>differing</em> alphas. Now, under the new approach, you are explicitly stated your hypotheses and testing them with one or combination of the tests listed above. If you read the manuscript by <span class="citation">Aisbett, Lakens, and Sainani (2020)</span> you will see this approach is logical and fairly straight forward. But, I imagine many former MBI are unsure how to accomplish this analysis since (1) this usually is not included in typical statistics education and (2) most have relied upon Hopkins’ spreadsheets to automatically perform the necessary calculations. I understand that many sport and exercise scientists do not have the requisite programming experience in SAS and R to feel comfortable with completing these analyses. In my opinion, it is worth the time to learn at least one of these programming languages, but if demand is great enough I will make a spreadsheet and post it to a repository that facilitates version control (e.g., GitHub).</p>
+<div class="figure">
+<img src="/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/TestingTypes.PNG" alt="" />
+<p class="caption">Figure 1. Comparison of hypothesis tests. The traditional nil-hypothesis tests (a) the null hypothesis that the effect is exactly equal to zero. The minimal effects test (b) tests against a null hypothesis of the true effect falling between the upper and lower equivalence bound, and the equivalence test (c) tests against the null hypothesis that the true effect is outside (greater or less than) the equivalence bound. Finally, the non-inferiority test (d) tests against the null hypothesis that the effect is at least as great as the bound (in one direction).</p>
+</div>
+</div>
+</div>
+<div id="application-in-r" class="section level1">
+<h1>Application in R</h1>
+<p>First, you will need to have the appropriate R packages for these analyses. I prefer to use <code>afex</code> <span class="citation">(Singmann et al. 2020)</span> and <code>emmeans</code> <span class="citation">(Lenth 2020)</span> because I find both pacakges easy to use, but other packages or base R functions could be used for these analyses. If you Google “How do I, insert procedure here, in R” you will likely get a variety of helpful results. So, if the procedures below don’t fit you needs then I’m sure there are numerous other resources within R that will be helpful. I highly suggest searching <a href="https://stackoverflow.com/questions/tagged/r">stackoverflow</a> for potential solutions. We will also use the <code>tidyverse</code> package <span class="citation">(Wickham et al. 2019)</span> to help manage the data and <code>broom</code> to produce some nice looking tables <span class="citation">(Robinson and Hayes 2020)</span>.</p>
+<pre class="r"><code>#Load the emmeans and afex packages
+library(afex)
+library(emmeans)
+library(tidyverse)
+library(broom)</code></pre>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>Now we need some data to analyze. In R this is straight forward since there are preloaded datasets available. For SAS, I will simply export this data as a csv file then import it into SAS using PROC IMPORT.</p>
+<pre class="r"><code>#Simple Three-Group 
+data(&quot;PlantGrowth&quot;)
+
+#Factorial 
+data(&quot;ToothGrowth&quot;)</code></pre>
+</div>
+<div id="plantgrowth-dataset" class="section level2">
+<h2>PlantGrowth Dataset</h2>
+<div class="figure"><span id="fig:fig-plantgrowth"></span>
+<img src="/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/figure-html/fig-plantgrowth-1.png" alt="PlantGrowth Data Visualization." width="480" />
+<p class="caption">
+Figure 1: PlantGrowth Data Visualization.
+</p>
+</div>
+<p>Description:</p>
+<blockquote>
+<p>“Results from an experiment to compare yields (as measured by dried weight of plants) obtained under a control and two different treatment conditions.”</p>
+</blockquote>
+<pre class="r"><code>head(PlantGrowth)</code></pre>
+<pre><code>##   weight group
+## 1   4.17  ctrl
+## 2   5.58  ctrl
+## 3   5.18  ctrl
+## 4   6.11  ctrl
+## 5   4.50  ctrl
+## 6   4.61  ctrl</code></pre>
+</div>
+<div id="toothgrowth-dataset" class="section level2">
+<h2>ToothGrowth Dataset</h2>
+<div class="figure"><span id="fig:fig-toothgrowth"></span>
+<img src="/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/figure-html/fig-toothgrowth-1.png" alt="ToothGrowth Data Visualization." width="480" />
+<p class="caption">
+Figure 2: ToothGrowth Data Visualization.
+</p>
+</div>
+<p>Description:</p>
+<blockquote>
+<p>“The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC).”</p>
+</blockquote>
+<pre class="r"><code>head(ToothGrowth)</code></pre>
+<pre><code>##    len supp dose
+## 1  4.2   VC  0.5
+## 2 11.5   VC  0.5
+## 3  7.3   VC  0.5
+## 4  5.8   VC  0.5
+## 5  6.4   VC  0.5
+## 6 10.0   VC  0.5</code></pre>
+</div>
+<div id="analysis-of-plantgrowth" class="section level2">
+<h2>Analysis of PlantGrowth</h2>
+<p>We will first have to add an “id” column to the PlantGrowth dataset and then build the ANOVA model using <code>afex</code>. In this scenario, we will consider a difference of 1 unit of <code>weight</code> to be the SESOI.</p>
+<pre class="r"><code>PlantGrowth = PlantGrowth %&gt;% 
+  dplyr::mutate(id = rownames(PlantGrowth)) 
+mod_plantgrowth = afex::aov_car(weight ~ group + Error(id), 
+                                data = PlantGrowth)</code></pre>
+<pre><code>## Contrasts set to contr.sum for the following variables: group</code></pre>
+<pre class="r"><code>tidyaov_plantgrowth = broom::tidy(mod_plantgrowth$aov)
+knitr::kable(tidyaov_plantgrowth)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">df</th>
+<th align="right">sumsq</th>
+<th align="right">meansq</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">group</td>
+<td align="right">2</td>
+<td align="right">3.76634</td>
+<td align="right">1.8831700</td>
+<td align="right">4.846088</td>
+<td align="right">0.01591</td>
+</tr>
+<tr class="even">
+<td align="left">Residuals</td>
+<td align="right">27</td>
+<td align="right">10.49209</td>
+<td align="right">0.3885959</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+<p>Now, that we have a linear model this can be passed onto the <code>emmeans</code> package for equivalence and minimal effects testing.</p>
+</div>
+<div id="mechanistic-equivalence-met-analysis" class="section level2">
+<h2>Mechanistic (Equivalence-MET) Analysis</h2>
+<pre class="r"><code>emm_plants = emmeans(mod_plantgrowth, trt.vs.ctrl1 ~ group, 
+                     adjust = &quot;none&quot;) 
+# Sets one group as the control to compare against the treatments
+
+# Note that adjust has to be set to &quot;none&quot; 
+# otherwise the dunnett correction is applied
+knitr::kable(confint(emm_plants$contrasts, level = .9), 
+             caption = &quot;Pairwise Comparisons with 90% C.I.&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-6">Table 1: </span>Pairwise Comparisons with 90% C.I.</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">lower.CL</th>
+<th align="right">upper.CL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">trt1 - ctrl</td>
+<td align="right">-0.371</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">-0.8458455</td>
+<td align="right">0.1038455</td>
+</tr>
+<tr class="even">
+<td align="left">trt2 - ctrl</td>
+<td align="right">0.494</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">0.0191545</td>
+<td align="right">0.9688455</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Equivalence Test
+emm_equivalence = test(emm_plants, 
+                       delta = 1, adjust = &quot;none&quot;)
+knitr::kable(emm_equivalence$contrasts, 
+             caption = &quot;Equivalence Tests&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-7">Table 2: </span>Equivalence Tests</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">trt1 - ctrl</td>
+<td align="right">-0.371</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">-2.256246</td>
+<td align="right">0.0161798</td>
+</tr>
+<tr class="even">
+<td align="left">trt2 - ctrl</td>
+<td align="right">0.494</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">-1.815041</td>
+<td align="right">0.0403211</td>
+</tr>
+</tbody>
+</table>
+<p>If we check the 90% confidence intervals, we can see that the upper limit (UL) is lower than the upper equivalence bound, but greater than the lower limit (LL) of the equivalence bound indicating equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that both treatments are statistically equivalent (at least at our prespecified SESOI; <code>delta</code> parameter in the <code>test</code> function). Notice that only 1 <em>p</em>-value is reported, <code>emmeans</code> completes equivalence testing by taking the absolute difference between groups.</p>
+</div>
+<div id="equation-emmeans-appears-to-be-using-for-equivalence-testing" class="section level2">
+<h2>Equation <code>emmeans</code> appears to be using for equivalence testing:</h2>
+<p><img src="https://render.githubusercontent.com/render/math?math=%24t%20%3D%20%5Cfrac%7B%7CM_%7B1%7D-M_%7B2%7D%7C-%5Cdelta%7D%7BSEM%7D%24" /></p>
+<p>Where M<sub>1</sub> and M<sub>2</sub> represent the means in condition 1 and condition 2 respectively, and <img src="https://render.githubusercontent.com/render/math?math=%24%5Cdelta%24" /> represents a <em>symmetrical</em> equivalence bound, and SEM is the standard error of the mean.</p>
+<p>Also, this is a one-tailed <em>t</em>-test:</p>
+<p><img src="https://render.githubusercontent.com/render/math?math=%24p%20%3D%20Pr(T_%7Bcrit%7D%20%3C%20t)%24" /></p>
+<p>Not a two-tailed test:</p>
+<p><img src="https://render.githubusercontent.com/render/math?math=%24p%20%3D%202%20%5Ccdot%20Pr(T_%7Bcrit%7D%20%3E%20%7Ct%7C)%24" /></p>
+<p>While it is unnecessary given the equivalence tests results, let’s see how we could perform the METs in both directions (positive and negative).</p>
+<pre class="r"><code>#Minimal Effects Test: Positive
+emm_MET = test(emm_plants, null = 1, 
+               adjust = &quot;none&quot;, side = &quot;&gt;&quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &quot;Minimal Effects Test: Positive&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-9">Table 3: </span>Minimal Effects Test: Positive</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">null</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">trt1 - ctrl</td>
+<td align="right">-0.371</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">1</td>
+<td align="right">-4.917828</td>
+<td align="right">0.9999810</td>
+</tr>
+<tr class="even">
+<td align="left">trt2 - ctrl</td>
+<td align="right">0.494</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">1</td>
+<td align="right">-1.815041</td>
+<td align="right">0.9596789</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Minimal Effects Test: Negative
+emm_MET = test(emm_plants, null = -1, adjust = &quot;none&quot;, side = &quot;&lt;&quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &quot;Minimal Effects Test: Negative&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-10">Table 4: </span>Minimal Effects Test: Negative</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">null</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">trt1 - ctrl</td>
+<td align="right">-0.371</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">-1</td>
+<td align="right">2.256246</td>
+<td align="right">0.9838202</td>
+</tr>
+<tr class="even">
+<td align="left">trt2 - ctrl</td>
+<td align="right">0.494</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">-1</td>
+<td align="right">5.359034</td>
+<td align="right">0.9999942</td>
+</tr>
+</tbody>
+</table>
+<p>The conclusions from a “mechanistic” inference: <strong>Both treatments, compared to control, are moderately compatible with equivalence</strong></p>
+</div>
+<div id="clinical-met-non-inferiority-analysis" class="section level2">
+<h2>Clinical (MET &amp; Non-Inferiority Analysis)</h2>
+<p>The data can also be interpreted with the “clinical MBI” approach which essentially boils down to a strict (low alpha; default = .005) and a more lax MET for benefit (high alpha; default = .25). In any case, individual researchers should set the alpha-level <em>a priori</em> and justify this decision <span class="citation">(Lakens et al. 2018; “Justify Your Alpha by Minimizing or Balancing Error Rate,” n.d.)</span>.</p>
+<p>For simplicity let’s keep the defaults for this analysis.</p>
+<p>First, we need to perform the non-inferiority tests. Luckily this is easy with <code>emmeans</code>.</p>
+<pre class="r"><code>#Non-Inferiority Test
+emm_nonif = test(emm_plants, delta = 1, 
+                 adjust = &quot;none&quot;, 
+                 side = &quot;noninferiority&quot;)
+knitr::kable(emm_nonif$contrasts, 
+             caption = &quot;Clinical Non-Inferiority&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-11">Table 5: </span>Clinical Non-Inferiority</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">trt1 - ctrl</td>
+<td align="right">-0.371</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">2.256246</td>
+<td align="right">0.0161798</td>
+</tr>
+<tr class="even">
+<td align="left">trt2 - ctrl</td>
+<td align="right">0.494</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">5.359034</td>
+<td align="right">0.0000058</td>
+</tr>
+</tbody>
+</table>
+<p>Treatment 1 (trt1) is only moderately compatible (given our predetermined alpha) with non-inferiority, but treatment 2 is strongly compatible (<em>p</em> &lt; .005) with non-inferiority.</p>
+<p>Now we can perform a MET for the benefit, but notice how the use of the <code>test</code> function has changed. Now, we call the <code>null</code> and <code>side</code> parameters to set the threshold and direction of the statistical test. In this case we can keep null as the same value since we are testing a positive effect and side is set to “&gt;” to indicate we are testing for superiority.</p>
+<pre class="r"><code>#Minimal Effects Test
+emm_nonif = test(emm_plants, null = 1, 
+                 adjust = &quot;none&quot;, side = &quot;&gt;&quot;)
+knitr::kable(emm_nonif$contrasts, 
+             caption = &quot;Clinical MET&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-12">Table 6: </span>Clinical MET</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">null</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">trt1 - ctrl</td>
+<td align="right">-0.371</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">1</td>
+<td align="right">-4.917828</td>
+<td align="right">0.9999810</td>
+</tr>
+<tr class="even">
+<td align="left">trt2 - ctrl</td>
+<td align="right">0.494</td>
+<td align="right">0.2787816</td>
+<td align="right">27</td>
+<td align="right">1</td>
+<td align="right">-1.815041</td>
+<td align="right">0.9596789</td>
+</tr>
+</tbody>
+</table>
+<p>Conclusion: <strong>Do not use trt1 because we cannot assume non-inferiority. However, we can use trt2, which is compatible with non-inferiority, despite no evidence of any meaningful benefit.</strong></p>
+</div>
+<div id="analysis-of-toothgrowth-data" class="section level2">
+<h2>Analysis of ToothGrowth Data</h2>
+<p>Again, we will need to add an “id” column to the ToothGrowth dataset and then build the ANOVA model using <code>afex</code>. Notice this time there is a interaction in the ANOVA. Also, in this case, we believe a difference of 3 units in <code>len</code> to be the SESOI.</p>
+<pre class="r"><code>ToothGrowth = ToothGrowth %&gt;% 
+  dplyr::mutate(id = rownames(ToothGrowth)) 
+mod_Toothgrowth = afex::aov_car(len ~ supp*dose + Error(id),
+                                data = ToothGrowth)</code></pre>
+<pre><code>## Converting to factor: dose</code></pre>
+<pre><code>## Contrasts set to contr.sum for the following variables: supp, dose</code></pre>
+<pre class="r"><code>tidyaov_Toothgrowth = broom::tidy(mod_Toothgrowth$aov)
+
+knitr::kable(tidyaov_Toothgrowth)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">df</th>
+<th align="right">sumsq</th>
+<th align="right">meansq</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">supp</td>
+<td align="right">1</td>
+<td align="right">205.350</td>
+<td align="right">205.35000</td>
+<td align="right">15.571979</td>
+<td align="right">0.0002312</td>
+</tr>
+<tr class="even">
+<td align="left">dose</td>
+<td align="right">2</td>
+<td align="right">2426.434</td>
+<td align="right">1213.21717</td>
+<td align="right">91.999965</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">supp:dose</td>
+<td align="right">2</td>
+<td align="right">108.319</td>
+<td align="right">54.15950</td>
+<td align="right">4.106991</td>
+<td align="right">0.0218603</td>
+</tr>
+<tr class="even">
+<td align="left">Residuals</td>
+<td align="right">54</td>
+<td align="right">712.106</td>
+<td align="right">13.18715</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
+<p>Now that we have a linear model this can be passed onto the <code>emmeans</code> package for equivalence and minimal effects testing.</p>
+</div>
+<div id="mechanistic-equivalence-met-analysis-1" class="section level2">
+<h2>Mechanistic (Equivalence-MET) Analysis</h2>
+<ol style="list-style-type: decimal">
+<li>Compare Dosage</li>
+</ol>
+<p>First, we want to compare Vitamin C dosage within each delivery method (VC or OJ) to see its effect on tooth growth.</p>
+<pre class="r"><code>emm_Tooths = emmeans(mod_Toothgrowth, 
+                     revpairwise ~ dose|supp, 
+                     adjust = &quot;none&quot;) 
+# Pairwise comparisions within each treatment across dosages
+
+# Note that adjust has to be set to &quot;none&quot; 
+# otherwise the dunnett correction is applied
+knitr::kable(confint(emm_Tooths$contrasts, level = .9), 
+             caption = &quot;Pairwise Comparisons with 90% C.I.&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-14">Table 7: </span>Pairwise Comparisons with 90% C.I.</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">supp</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">lower.CL</th>
+<th align="right">upper.CL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1 - 0.5</td>
+<td align="left">OJ</td>
+<td align="right">9.47</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">6.752103</td>
+<td align="right">12.187897</td>
+</tr>
+<tr class="even">
+<td align="left">2 - 0.5</td>
+<td align="left">OJ</td>
+<td align="right">12.83</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">10.112103</td>
+<td align="right">15.547897</td>
+</tr>
+<tr class="odd">
+<td align="left">2 - 1</td>
+<td align="left">OJ</td>
+<td align="right">3.36</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">0.642103</td>
+<td align="right">6.077897</td>
+</tr>
+<tr class="even">
+<td align="left">1 - 0.5</td>
+<td align="left">VC</td>
+<td align="right">8.79</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">6.072103</td>
+<td align="right">11.507897</td>
+</tr>
+<tr class="odd">
+<td align="left">2 - 0.5</td>
+<td align="left">VC</td>
+<td align="right">18.16</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">15.442103</td>
+<td align="right">20.877897</td>
+</tr>
+<tr class="even">
+<td align="left">2 - 1</td>
+<td align="left">VC</td>
+<td align="right">9.37</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">6.652103</td>
+<td align="right">12.087897</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Equivalence Test
+emm_equivalence = test(emm_Tooths, 
+                       delta = 3, adjust = &quot;none&quot;)
+knitr::kable(emm_equivalence$contrasts, 
+             caption = &quot;Equivalence Tests&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-14">Table 7: </span>Equivalence Tests</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">supp</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1 - 0.5</td>
+<td align="left">OJ</td>
+<td align="right">9.47</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3.9839496</td>
+<td align="right">0.9998977</td>
+</tr>
+<tr class="even">
+<td align="left">2 - 0.5</td>
+<td align="left">OJ</td>
+<td align="right">12.83</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">6.0528941</td>
+<td align="right">0.9999999</td>
+</tr>
+<tr class="odd">
+<td align="left">2 - 1</td>
+<td align="left">OJ</td>
+<td align="right">3.36</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">0.2216726</td>
+<td align="right">0.5872975</td>
+</tr>
+<tr class="even">
+<td align="left">1 - 0.5</td>
+<td align="left">VC</td>
+<td align="right">8.79</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3.5652347</td>
+<td align="right">0.9996148</td>
+</tr>
+<tr class="odd">
+<td align="left">2 - 0.5</td>
+<td align="left">VC</td>
+<td align="right">18.16</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">9.3348805</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">2 - 1</td>
+<td align="left">VC</td>
+<td align="right">9.37</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3.9223739</td>
+<td align="right">0.9998752</td>
+</tr>
+</tbody>
+</table>
+<p>If we check the 90% confidence intervals, we can see that the lower limit (LL) is higher than the upper equivalence bound, in all but one condition, indicating non-equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that <strong>none</strong> of the doses in either treatment can be considered equivalent.</p>
+<p>Now, let’s perform the METs in both directions (positive and negative).</p>
+<pre class="r"><code>#Minimal Effects Test: Positive
+emm_MET = test(emm_Tooths, null = 3, 
+               adjust = &quot;none&quot;, side = &quot;&gt;&quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &quot;Minimal Effects Test: Positive&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-15">Table 8: </span>Minimal Effects Test: Positive</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">supp</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">null</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1 - 0.5</td>
+<td align="left">OJ</td>
+<td align="right">9.47</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">3.9839496</td>
+<td align="right">0.0001023</td>
+</tr>
+<tr class="even">
+<td align="left">2 - 0.5</td>
+<td align="left">OJ</td>
+<td align="right">12.83</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">6.0528941</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr class="odd">
+<td align="left">2 - 1</td>
+<td align="left">OJ</td>
+<td align="right">3.36</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">0.2216726</td>
+<td align="right">0.4127025</td>
+</tr>
+<tr class="even">
+<td align="left">1 - 0.5</td>
+<td align="left">VC</td>
+<td align="right">8.79</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">3.5652347</td>
+<td align="right">0.0003852</td>
+</tr>
+<tr class="odd">
+<td align="left">2 - 0.5</td>
+<td align="left">VC</td>
+<td align="right">18.16</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">9.3348805</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">2 - 1</td>
+<td align="left">VC</td>
+<td align="right">9.37</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">3.9223739</td>
+<td align="right">0.0001248</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Minimal Effects Test: Negative
+emm_MET = test(emm_Tooths, null = -3, 
+               adjust = &quot;none&quot;, side = &quot;&lt;&quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &quot;Minimal Effects Test: Negative&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-15">Table 8: </span>Minimal Effects Test: Negative</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">supp</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">null</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1 - 0.5</td>
+<td align="left">OJ</td>
+<td align="right">9.47</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">7.678493</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">2 - 0.5</td>
+<td align="left">OJ</td>
+<td align="right">12.83</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">9.747438</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">2 - 1</td>
+<td align="left">OJ</td>
+<td align="right">3.36</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">3.916216</td>
+<td align="right">0.9998727</td>
+</tr>
+<tr class="even">
+<td align="left">1 - 0.5</td>
+<td align="left">VC</td>
+<td align="right">8.79</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">7.259778</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">2 - 0.5</td>
+<td align="left">VC</td>
+<td align="right">18.16</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">13.029424</td>
+<td align="right">1.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">2 - 1</td>
+<td align="left">VC</td>
+<td align="right">9.37</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">7.616918</td>
+<td align="right">1.0000000</td>
+</tr>
+</tbody>
+</table>
+<p>We see that the data, in almost all conditions, is highly compatible with the hypothesis that a higher dosage results in a meaningful positive effect. However, it is inconclusive (non-equivalent and non-positive) if increasing dosage with OJ to 2 from 1 improves tooth growth.</p>
+<p>The conclusions from a “mechanistic” inference: <strong>Increasing dosage of OJ or VC results in increased tooth growth, but it is inconclusive if increasing OJ dosage (from 1 to 2) results in a meaningful improvement.</strong></p>
+<ol start="2" style="list-style-type: decimal">
+<li>Compare Delivery Methods</li>
+</ol>
+<p>You may want to compare each delivery method at the specified doses. To do so, you simply flip the order of the factors in <code>emmeans</code>.</p>
+<pre class="r"><code>emm_Tooths = emmeans(mod_Toothgrowth, 
+                     revpairwise ~ supp|dose, 
+                     adjust = &quot;none&quot;) 
+
+knitr::kable(confint(emm_Tooths$contrasts, level = .9), 
+             caption = &quot;Pairwise Comparisons with 90% C.I.&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-16">Table 9: </span>Pairwise Comparisons with 90% C.I.</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">dose</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">lower.CL</th>
+<th align="right">upper.CL</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">0.5</td>
+<td align="right">-5.25</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-7.967897</td>
+<td align="right">-2.532103</td>
+</tr>
+<tr class="even">
+<td align="left">VC - OJ</td>
+<td align="left">1</td>
+<td align="right">-5.93</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-8.647897</td>
+<td align="right">-3.212103</td>
+</tr>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">2</td>
+<td align="right">0.08</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-2.637897</td>
+<td align="right">2.797897</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Equivalence Test
+emm_equivalence = test(emm_Tooths, 
+                       delta = 3, adjust = &quot;none&quot;)
+knitr::kable(emm_equivalence$contrasts, 
+             caption = &quot;Equivalence Tests&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-16">Table 9: </span>Equivalence Tests</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">dose</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">0.5</td>
+<td align="right">-5.25</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">1.385454</td>
+<td align="right">0.9141950</td>
+</tr>
+<tr class="even">
+<td align="left">VC - OJ</td>
+<td align="left">1</td>
+<td align="right">-5.93</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">1.804169</td>
+<td align="right">0.9616084</td>
+</tr>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">2</td>
+<td align="right">0.08</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-1.798011</td>
+<td align="right">0.0388832</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Minimal Effects Test: Positive
+emm_MET = test(emm_Tooths, null = 3, 
+               adjust = &quot;none&quot;, side = &quot;&gt;&quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &quot;Minimal Effects Test: Positive&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-16">Table 9: </span>Minimal Effects Test: Positive</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">dose</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">null</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">0.5</td>
+<td align="right">-5.25</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">-5.079998</td>
+<td align="right">0.9999976</td>
+</tr>
+<tr class="even">
+<td align="left">VC - OJ</td>
+<td align="left">1</td>
+<td align="right">-5.93</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">-5.498713</td>
+<td align="right">0.9999995</td>
+</tr>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">2</td>
+<td align="right">0.08</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">-1.798011</td>
+<td align="right">0.9611168</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Minimal Effects Test: Negative
+emm_MET = test(emm_Tooths, null = -3, 
+               adjust = &quot;none&quot;, side = &quot;&lt;&quot;)
+knitr::kable(emm_MET$contrasts, 
+             caption = &quot;Minimal Effects Test: Negative&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-16">Table 9: </span>Minimal Effects Test: Negative</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">dose</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">null</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">0.5</td>
+<td align="right">-5.25</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">-1.385454</td>
+<td align="right">0.0858050</td>
+</tr>
+<tr class="even">
+<td align="left">VC - OJ</td>
+<td align="left">1</td>
+<td align="right">-5.93</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">-1.804169</td>
+<td align="right">0.0383916</td>
+</tr>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">2</td>
+<td align="right">0.08</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-3</td>
+<td align="right">1.896532</td>
+<td align="right">0.9683779</td>
+</tr>
+</tbody>
+</table>
+<p>Conclusion: <strong>the data is weakly compatible with a negative effect of VC at the lower 2 doses, but is moderately compatible with equivalence at the highest dosage.</strong></p>
+</div>
+<div id="clinical-met-non-inferiority-analysis-1" class="section level2">
+<h2>Clinical (MET &amp; Non-Inferiority Analysis)</h2>
+<p>For the “clinical MBI” approach let’s again use the same alphas as before (non-inferiority: .005 and MET: .25)</p>
+<p>For simplicity, let’s just compare the delivery methods at each dosage.</p>
+<pre class="r"><code>#Non-Inferiority Test
+emm_nonif = test(emm_Tooths, delta = 3, 
+                 adjust = &quot;none&quot;, 
+                 side = &quot;noninferiority&quot;)
+knitr::kable(emm_nonif$contrasts, 
+             caption = &quot;Clinical Non-Inferiority&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-17">Table 10: </span>Clinical Non-Inferiority</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">dose</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">0.5</td>
+<td align="right">-5.25</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-1.385454</td>
+<td align="right">0.9141950</td>
+</tr>
+<tr class="even">
+<td align="left">VC - OJ</td>
+<td align="left">1</td>
+<td align="right">-5.93</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">-1.804169</td>
+<td align="right">0.9616084</td>
+</tr>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">2</td>
+<td align="right">0.08</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">1.896532</td>
+<td align="right">0.0316221</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#Minimal Effects Test
+emm_nonif = test(emm_Tooths, null = 3, 
+                 adjust = &quot;none&quot;, side = &quot;&gt;&quot;)
+knitr::kable(emm_nonif$contrasts, 
+             caption = &quot;Clinical MET&quot;)</code></pre>
+<table>
+<caption><span id="tab:unnamed-chunk-17">Table 10: </span>Clinical MET</caption>
+<thead>
+<tr class="header">
+<th align="left">contrast</th>
+<th align="left">dose</th>
+<th align="right">estimate</th>
+<th align="right">SE</th>
+<th align="right">df</th>
+<th align="right">null</th>
+<th align="right">t.ratio</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">0.5</td>
+<td align="right">-5.25</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">-5.079998</td>
+<td align="right">0.9999976</td>
+</tr>
+<tr class="even">
+<td align="left">VC - OJ</td>
+<td align="left">1</td>
+<td align="right">-5.93</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">-5.498713</td>
+<td align="right">0.9999995</td>
+</tr>
+<tr class="odd">
+<td align="left">VC - OJ</td>
+<td align="left">2</td>
+<td align="right">0.08</td>
+<td align="right">1.624016</td>
+<td align="right">54</td>
+<td align="right">3</td>
+<td align="right">-1.798011</td>
+<td align="right">0.9611168</td>
+</tr>
+</tbody>
+</table>
+<p>In this case, VC fails to adequately demonstrate non-inferiority.</p>
+<p>Conclusion: <strong>Do not use VC at any dosage as it does not demonstrate adequate non-inferiority to OJ, and failed to provide any evidence of having a meaningful positive effect.</strong></p>
+</div>
+</div>
+<div id="application-in-sas" class="section level1">
+<h1>Application in SAS</h1>
+<p>For the most part this will be accomplished using SAS’s PROC MIXED, but a number of procedures also support these functions <span class="citation">(Kiernan et al. 2011)</span>. The only SAS procedure I would suggest <em>not</em> using is PROC GLM, as I do not believe SAS has done anything to update this procedure in quite some time. I see no advantage of using PROC GLM over PROC MIXED. For simplicity, I will only being doing one analysis for each dataset.</p>
+<div id="import-data" class="section level2">
+<h2>Import Data</h2>
+<p>First, you will need to export the data from R.</p>
+<pre class="r"><code>write.csv(ToothGrowth, &quot;tooth.csv&quot;)
+
+write.csv(PlantGrowth, &quot;plant.csv&quot;)</code></pre>
+<p>Now, we can import it into SAS with PROC IMPORT. Remember, to change the file path!</p>
+<pre><code>PROC IMPORT OUT= WORK.plant 
+            DATAFILE= &quot;C:\Users\aaron.caldwell\Documents\plant.csv&quot; 
+            DBMS=CSV REPLACE;
+     GETNAMES=YES;
+     DATAROW=2; 
+RUN;
+
+PROC IMPORT OUT= WORK.tooth 
+            DATAFILE= &quot;C:\Users\aaron.caldwell\Documents\tooth.csv&quot; 
+            DBMS=CSV REPLACE;
+     GETNAMES=YES;
+     DATAROW=2; 
+RUN;</code></pre>
+</div>
+<div id="analysis-of-plantgrowth-mechanistic-equivalence-met-analysis" class="section level2">
+<h2>Analysis of PlantGrowth – Mechanistic (Equivalence-MET) Analysis</h2>
+<p>In this scenario, we will consider a difference of 1 unit of <code>weight</code> to be the SESOI.</p>
+<p>Now, in SAS’s PROC MIXED equivalence and minimal effects testing will be carried out via the LSMESTIMATE statement.</p>
+<pre><code>
+/*Mechanistic MBI */
+title &quot;Mechanistic MBI: PlantGrowth&quot;;
+PROC MIXED data=plant;
+class group;
+model weight = group;
+lsmeans group / CL; /*Gets all the means and CI for each condition*/
+lsmestimate group
+&quot;ctrl v trt1&quot; [1, 1] [-1,2], /*The first number sets the contrast and the assigns the level of group*/
+&quot;ctrl v trt2&quot; [1, 1] [-1,3]
+/ TESTVALUE=-1 UPPER CL; /*Lower bound equivalence test*/
+lsmestimate group
+&quot;ctrl v trt1&quot; [1, 1] [-1,2],
+&quot;ctrl v trt2&quot; [1, 1] [-1,3]
+/ TESTVALUE=1 LOWER CL; /*Upper bound equivalence test*/
+run;
+quit;
+</code></pre>
+<div class="figure">
+<img src="/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/Mech_Eq_Plant.PNG" alt="" />
+<p class="caption">Figure 2. LSMESTIMATE Results for Equivalence Testing on Plant Data.</p>
+</div>
+<p>If we check the confidence limits, we can see that the upper limit (UL) is lower than the upper equivalence bound, but greater than the lower limit (LL) of the equivalence bound indicating equivalence at an alpha of .05 at both bounds. Pairwise comparisons indicate that both treatments are statistically equivalent (at least at our prespecified SESOI set by the <code>TESTVALUE</code> parameter in the <code>LSMESTIMATE</code> statement). Notice that only 2 <em>p</em>-values are reported, unlike <code>emmeans</code> we must perform an upper bound <em>and</em> lower bound test. We only infer equivalence if the <em>highest</em> <em>p</em>-value for each comparison is less than the predetermined alpha.</p>
+<p>The conclusions from a “mechanistic” inference: <strong>Both treatments, compared to control, are moderately compatible with equivalence</strong></p>
+</div>
+<div id="toothgrowth-clinical-met-non-inferiority-analysis" class="section level2">
+<h2>ToothGrowth Clinical (MET &amp; Non-Inferiority) Analysis</h2>
+<p>This is fairly straight forward in SAS. All we need to do is modify the upper bound <code>TESTVALUE</code> and modify the <code>alpha</code>.
+For the “clinical MBI” approach let’s change the alpha for the MET (non-inferiority: .005 and MET: .2).</p>
+<pre><code>/*Clinical MBI */
+title &quot;Clinical MBI: ToothGrowth&quot;;
+PROC MIXED data=tooth;
+class supp dose;
+model len = supp|dose;
+lsmeans supp*dose / CL;  /*Gets all the means and CI for each condition*/
+lsmestimate supp*dose
+&quot;OJ vs VC @ 0.5 mg dose&quot; [-1, 1 3] [1, 2 3],
+&quot;OJ vs VC @ 1 mg dose&quot; [-1, 1 1] [1, 2 1],
+&quot;OJ vs VC @ 2 mg dose&quot; [-1, 1 2] [1, 2 2]
+/ TESTVALUE=-1 CL UPPER alpha=.005;
+lsmestimate supp*dose
+&quot;OJ vs VC @ 0.5 mg dose&quot; [-1, 1 3] [1, 2 3],
+&quot;OJ vs VC @ 1 mg dose&quot; [-1, 1 1] [1, 2 1],
+&quot;OJ vs VC @ 2 mg dose&quot; [-1, 1 2] [1, 2 2]
+/ TESTVALUE=1 CL UPPER alpha=.2;
+run;
+quit;
+</code></pre>
+<p>For simplicity, let’s just compare the delivery methods at each dosage.</p>
+<div class="figure">
+<img src="/post/2020-05-04-magnitude-based-inference-in-r-and-sas_files/Clin_Eq_Tooth.PNG" alt="" />
+<p class="caption">Figure 3. LSMESTIMATE Results for Equivalence Testing on Tooth Data.</p>
+</div>
+<p>In this case, VC fails to adequately demonstrate non-inferiority.</p>
+<p>Conclusion: <strong>Do not use VC at any dosage as it does not demonstrate adequate non-inferiority to OJ, and failed to provide any evidence of having a meaningful positive effect.</strong></p>
+</div>
+</div>
+<div id="writing-your-methods" class="section level1">
+<h1>Writing your Methods</h1>
+<p>One of the more frustrating problems I noticed with research reporting MBI in the past was the lack of detail in their methods sections about the statistical methods they utilized.
+Frankly this is a problem in most sport and exercise science manuscripts, not just those that utilized MBI.
+Therefore, I have created a short list of items that should always be included if you are using this approach.</p>
+<ol style="list-style-type: decimal">
+<li><strong>Note what types of hypotheses you are testing.</strong></li>
+</ol>
+<ul>
+<li>If you are using the “mechanistic” approach: note that you are simply performing an equivalence/MET test</li>
+<li>If you are using the “clincal” approach: note that you are using a non-inferiority test <strong>and</strong> a minimal effects test</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li><strong>State the alpha level(s)</strong></li>
+</ol>
+<ul>
+<li>Even if you are using the “compatibility” bounds outlined by <span class="citation">Aisbett, Lakens, and Sainani (2020)</span> you should directly state the alpha levels for used within your manuscript.</li>
+<li>Justifying your alpha can be difficult and should be done <em>a priori</em>. Most likely, this can be accomplished when you are planning your sample size for data collection by balancing your type 1 and type 2 error using a compromise power analysis.
+<ul>
+<li>There are blog posts from <a href="https://blog.minitab.com/blog/understanding-statistics/which-statistical-error-is-worse-type-1-or-type-2">minitab</a> and <a href="http://daniellakens.blogspot.com/2019/05/justifying-your-alpha-by-minimizing-or.html">Lakens</a> that may be helpful here.</li>
+</ul></li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li><strong>State your smallest effect size(s) of interest (SESOI)</strong></li>
+</ol>
+<ul>
+<li>In most cases of MBI users have defaulted to a difference of 0.2 standard deviations (Cohen’s d = 0.2)</li>
+<li>I would encourage researchers to have justification for their SESOI whether based on practitioner preferences (e.g., “coaches have stated an interest in an effect of X magnitude”) or based on empirical evidence.
+-For empirical justifications, I suggest reading the DETLA2 guidelines <span class="citation">(Cook et al. 2018)</span>.</li>
+</ul>
+<ol start="4" style="list-style-type: decimal">
+<li><strong>Note and cite what statistical software and programs you used to analyze the data.</strong></li>
+</ol>
+<ul>
+<li>Try to be specific and include version number
+<ul>
+<li>This is important because as the software is updated some calculations may change.</li>
+</ul></li>
+</ul>
+</div>
+<div id="concluding-remarks" class="section level1">
+<h1>Concluding Remarks</h1>
+<p>Any researcher is capable of performing the appropriate equivalence, MET, and non-inferiority tests in R or SAS. As I have documented, making a “magnitude based inference” is fairly simple and straight forward procedure when it is viewed through these lenses. All of these approaches (equivalence, MET, and non-inferiority tests) in the scenarios I have outlined are special cases of a one-tailed <em>t</em>-test. Researchers who would like to adopt this approach should read the work by <span class="citation">Aisbett, Lakens, and Sainani (2020)</span> to ensure they fully understand the statistical framework. Both Batterham &amp; Hopkins, the creators of MBI, should be also commended for moving the conversation surrounding statistical inference in sport science from a focus on “nil hypotheses” to a focus on the magnitude of the effect size. However, I would strongly encourage all sports scientists that have used magnitude based inference in the past to adopt this straightforward frequentist approach or adopt a fully Bayesian approach to inference <span class="citation">(Ravenzwaaij et al. 2019)</span>.</p>
+</div>
+<div id="questions" class="section level1">
+<h1>Questions?</h1>
+<p>If you have any questions, please feel free to <a href="https://aaroncaldwell.us/">contact me</a>.</p>
+</div>
+<div id="references" class="section level1 unnumbered">
+<h1>References</h1>
+<div id="refs" class="references">
+<div id="ref-Aisbett2020">
+<p>Aisbett, Janet, Daniel Lakens, and Kristin Sainani. 2020. “Magnitude Based Inference in Relation to One-Sided Hypotheses Testing Procedures,” May. <a href="https://doi.org/10.31236/osf.io/pn9s3">https://doi.org/10.31236/osf.io/pn9s3</a>.</p>
+</div>
+<div id="ref-Amrhein2019">
+<p>Amrhein, Valentin, David Trafimow, and Sander Greenland. 2019. “Inferential Statistics as Descriptive Statistics: There Is No Replication Crisis If We Don’t Expect Replication.” <em>The American Statistician</em> 73 (sup1): 262–70. <a href="https://doi.org/10.1080/00031305.2018.1543137">https://doi.org/10.1080/00031305.2018.1543137</a>.</p>
+</div>
+<div id="ref-Batterham_Hopkins_2006">
+<p>Batterham, Alan M., and William G. Hopkins. 2006. “Making Meaningful Inferences About Magnitudes.” <em>International Journal of Sports Physiology and Performance</em> 1 (1): 50–57. <a href="https://doi.org/10.1123/ijspp.1.1.50">https://doi.org/10.1123/ijspp.1.1.50</a>.</p>
+</div>
+<div id="ref-chow2019semantic">
+<p>Chow, Zad R., and Sander Greenland. 2019. “Semantic and Cognitive Tools to Aid Statistical Inference: Replace Confidence and Significance by Compatibility and Surprise.” <a href="http://arxiv.org/abs/1909.08579">http://arxiv.org/abs/1909.08579</a>.</p>
+</div>
+<div id="ref-cook2018">
+<p>Cook, Jonathan A., Steven A. Julious, William Sones, Lisa V. Hampson, Catherine Hewitt, Jesse A. Berlin, Deborah Ashby, et al. 2018. “Choosing the Target Difference (&amp;Ldquo<span class="math inline">\(\mathsemicolon\)</span>effect Size&amp;rdquo<span class="math inline">\(\mathsemicolon\)</span>) for a Randomised Controlled Trial - DELTA<span class="math inline">\(\less\)</span>sup<span class="math inline">\(\greater\)</span>2<span class="math inline">\(\less\)</span>/Sup<span class="math inline">\(\greater\)</span>&amp;nbsp<span class="math inline">\(\mathsemicolon\)</span>Guidance,” August. <a href="https://doi.org/10.20944/preprints201808.0521.v1">https://doi.org/10.20944/preprints201808.0521.v1</a>.</p>
+</div>
+<div id="ref-s2019aid">
+<p>Greenland, Sander, and Zad R. Chow. 2019. “To Aid Statistical Inference, Emphasize Unconditional Descriptions of Statistics.” <a href="http://arxiv.org/abs/1909.08583">http://arxiv.org/abs/1909.08583</a>.</p>
+</div>
+<div id="ref-blog-JYA">
+<p>“Justify Your Alpha by Minimizing or Balancing Error Rate.” n.d. <a href="http://http://daniellakens.blogspot.com/2019/05/justifying-your-alpha-by-minimizing-or.html">http://http://daniellakens.blogspot.com/2019/05/justifying-your-alpha-by-minimizing-or.html</a>.</p>
+</div>
+<div id="ref-SAS_lsmestimate">
+<p>Kiernan, Kathleen, Randy Tobias, Phil Gibbs, and Jill Tao. 2011. “CONTRAST and Estimate Statements Made Easy: The Lsmestimate Statement.” <em>SAS Global Forum</em> 2011 (351): 1–19. <a href="https://support.sas.com/resources/papers/proceedings11/351-2011.pdf">https://support.sas.com/resources/papers/proceedings11/351-2011.pdf</a>.</p>
+</div>
+<div id="ref-lakens-JYA">
+<p>Lakens, Daniel, Federico G. Adolfi, Casper J. Albers, Farid Anvari, Matthew A. J. Apps, Shlomo E. Argamon, Thom Baguley, et al. 2018. “Justify Your Alpha.” <em>Nature Human Behaviour</em> 2 (3): 168–71. <a href="https://doi.org/10.1038/s41562-018-0311-x">https://doi.org/10.1038/s41562-018-0311-x</a>.</p>
+</div>
+<div id="ref-Lakens2018">
+<p>Lakens, Daniël, Anne M. Scheel, and Peder M. Isager. 2018a. “Equivalence Testing for Psychological Research: A Tutorial.” <em>Advances in Methods and Practices in Psychological Science</em> 1 (2): 259–69. <a href="https://doi.org/10.1177/2515245918770963">https://doi.org/10.1177/2515245918770963</a>.</p>
+</div>
+<div id="ref-Lakens_Scheel_Isager_2018">
+<p>———. 2018b. “Equivalence Testing for Psychological Research: A Tutorial.” <em>Advances in Methods and Practices in Psychological Science</em> 1 (2): 259–69. <a href="https://doi.org/10.1177/2515245918770963">https://doi.org/10.1177/2515245918770963</a>.</p>
+</div>
+<div id="ref-R-emmeans">
+<p>Lenth, Russell. 2020. <em>Emmeans: Estimated Marginal Means, Aka Least-Squares Means</em>. <a href="https://CRAN.R-project.org/package=emmeans">https://CRAN.R-project.org/package=emmeans</a>.</p>
+</div>
+<div id="ref-Lohse2020">
+<p>Lohse, Keith, Kristin Sainani, J. Andrew Taylor, Michael Lloyd Butson, Emma Knight, and Andrew Vickers. 2020. “Systematic Review of the Use of ‘Magnitude-Based Inference’ in Sports Science and Medicine.” Center for Open Science. <a href="https://doi.org/10.31236/osf.io/wugcr">https://doi.org/10.31236/osf.io/wugcr</a>.</p>
+</div>
+<div id="ref-R-mbir">
+<p>Peterson, Kyle, and Aaron Caldwell. 2019. <em>Mbir: Magnitude-Based Inferences</em>. <a href="https://CRAN.R-project.org/package=mbir">https://CRAN.R-project.org/package=mbir</a>.</p>
+</div>
+<div id="ref-concurve">
+<p>Rafi, Zad, and Andrew D. Vigotsky. 2020. <em>concurve: Computes and Plots Compatibility (Confidence) Intervals, P-Values, S-Values, &amp; Likelihood Intervals to Form Consonance, Surprisal, &amp; Likelihood Functions</em>. <a href="https://CRAN.R-project.org/package=concurve">https://CRAN.R-project.org/package=concurve</a>.</p>
+</div>
+<div id="ref-vanRavenzwaaij2019">
+<p>Ravenzwaaij, Don van, Rei Monden, Jorge N. Tendeiro, and John P. A. Ioannidis. 2019. “Bayes Factors for Superiority, Non-Inferiority, and Equivalence Designs.” <em>BMC Medical Research Methodology</em> 19 (1). <a href="https://doi.org/10.1186/s12874-019-0699-7">https://doi.org/10.1186/s12874-019-0699-7</a>.</p>
+</div>
+<div id="ref-R-broom">
+<p>Robinson, David, and Alex Hayes. 2020. <em>Broom: Convert Statistical Analysis Objects into Tidy Tibbles</em>. <a href="https://CRAN.R-project.org/package=broom">https://CRAN.R-project.org/package=broom</a>.</p>
+</div>
+<div id="ref-Sainani_2018">
+<p>Sainani, Krisitin. 2018. “The Problem with ‘Magnitude-Based Inference’.” <em>Medicine &amp; Science in Sports &amp; Exercise</em> 50 (10): 2166–76. <a href="https://doi.org/10.1249/mss.0000000000001645">https://doi.org/10.1249/mss.0000000000001645</a>.</p>
+</div>
+<div id="ref-Sainani2019">
+<p>Sainani, Kristin L., Keith R. Lohse, Paul Remy Jones, and Andrew Vickers. 2019. “Magnitude-Based Inference Is Not Bayesian and Is Not a Valid Method of Inference.” <em>Scandinavian Journal of Medicine &amp; Science in Sports</em> 29 (9): 1428–36. <a href="https://doi.org/10.1111/sms.13491">https://doi.org/10.1111/sms.13491</a>.</p>
+</div>
+<div id="ref-R-afex">
+<p>Singmann, Henrik, Ben Bolker, Jake Westfall, Frederik Aust, and Mattan S. Ben-Shachar. 2020. <em>Afex: Analysis of Factorial Experiments</em>. <a href="https://CRAN.R-project.org/package=afex">https://CRAN.R-project.org/package=afex</a>.</p>
+</div>
+<div id="ref-R-tidyverse">
+<p>Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy D’Agostino McGowan, Romain François, Garrett Grolemund, et al. 2019. “Welcome to the tidyverse.” <em>Journal of Open Source Software</em> 4 (43): 1686. <a href="https://doi.org/10.21105/joss.01686">https://doi.org/10.21105/joss.01686</a>.</p>
+</div>
+</div>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<div class="article-tags">
+  
+  <a class="badge badge-light" href="/tags/magnitude-based-inference/">magnitude based inference</a>
+  
+  <a class="badge badge-light" href="/tags/r/">R</a>
+  
+  <a class="badge badge-light" href="/tags/sas/">SAS</a>
+  
+  <a class="badge badge-light" href="/tags/statistics/">statistics</a>
+  
+  <a class="badge badge-light" href="/tags/mbi/">MBI</a>
+  
+</div>
+
+
+
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://twitter.com/intent/tweet?url=https://aaroncaldwell.us/post/new-mbi/&amp;text=Magnitude%20Based%20Inference%20in%20R%20and%20SAS" target="_blank" rel="noopener" class="share-btn-twitter">
+          <i class="fab fa-twitter"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.facebook.com/sharer.php?u=https://aaroncaldwell.us/post/new-mbi/&amp;t=Magnitude%20Based%20Inference%20in%20R%20and%20SAS" target="_blank" rel="noopener" class="share-btn-facebook">
+          <i class="fab fa-facebook"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="mailto:?subject=Magnitude%20Based%20Inference%20in%20R%20and%20SAS&amp;body=https://aaroncaldwell.us/post/new-mbi/" target="_blank" rel="noopener" class="share-btn-email">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://www.linkedin.com/shareArticle?url=https://aaroncaldwell.us/post/new-mbi/&amp;title=Magnitude%20Based%20Inference%20in%20R%20and%20SAS" target="_blank" rel="noopener" class="share-btn-linkedin">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="whatsapp://send?text=Magnitude%20Based%20Inference%20in%20R%20and%20SAS%20https://aaroncaldwell.us/post/new-mbi/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+      </li>
+    
+      
+      
+      
+        
+      
+      
+      
+      <li>
+        <a href="https://service.weibo.com/share/share.php?url=https://aaroncaldwell.us/post/new-mbi/&amp;title=Magnitude%20Based%20Inference%20in%20R%20and%20SAS" target="_blank" rel="noopener" class="share-btn-weibo">
+          <i class="fab fa-weibo"></i>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+</article>
+
+      
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js" integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js" integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js" integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/instant.page/5.1.0/instantpage.min.js" integrity="sha512-1+qUtKoh9XZW7j+6LhRMAyOrgSQKenQ4mluTR+cvxXjP1Z54RxZuzstR/H9kgPXQsVB8IW7DMDFUJpzLjvhGSQ==" crossorigin="anonymous"></script>
+
+      
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js" integrity="sha512-7t8APmYpzEsZP7CYoA7RfMPV9Bb+PJHa9x2WiUnDXZx3XHveuyWUtvNOexhkierl5flZ3tr92dP1mMS+SGlD+A==" crossorigin="anonymous"></script>
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/languages/r.min.js"></script>
+        
+      
+
+    
+
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js" integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin="anonymous"></script>
+    
+
+    
+    
+    <script>const code_highlighting = true;</script>
+    
+
+    
+    
+    
+    
+    
+    
+    <script>
+      const search_config = {"indexURI":"/index.json","minLength":1,"threshold":0.3};
+      const i18n = {"no_results":"No results found","placeholder":"Search...","results":"results found"};
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks",
+        'slides' : "Slides"
+        };
+    </script>
+    
+
+    
+    
+
+    
+    
+    <script id="search-hit-fuse-template" type="text/x-template">
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    
+
+    
+    
+
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+      
+    
+    
+    
+    
+    <script src="/js/academic.min.f6ecf7692215f2bc4850b72c8176bfa2.js"></script>
+
+    
+
+
+
+
+
+
+  
+  
+  <div class="container">
+    <footer class="site-footer">
+  
+
+  <p class="powered-by">
+    
+  </p>
+
+  
+  
+
+
+
+
+
+
+  <p class="powered-by">
+    
+    Published with
+    <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic Website Builder</a>
+    
+
+    
+    <span class="float-right" aria-hidden="true">
+      <a href="#" class="back-to-top">
+        <span class="button_icon">
+          <i class="fas fa-chevron-up fa-2x"></i>
+        </span>
+      </a>
+    </span>
+    
+  </p>
+</footer>
+
+  </div>
+  
+
+  
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cite</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre><code class="tex hljs"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary my-1 js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-outline-primary my-1 js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

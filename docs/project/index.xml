@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects | Aaron Caldwell</title>
+    <link>https://aaroncaldwell.us/project/</link>
+      <atom:link href="https://aaroncaldwell.us/project/index.xml" rel="self" type="application/rss+xml" />
+    <description>Projects</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 11 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://aaroncaldwell.us/media/logo.png</url>
+      <title>Projects</title>
+      <link>https://aaroncaldwell.us/project/</link>
+    </image>
+    
+    <item>
+      <title>Exact Simulation Power Shiny App</title>
+      <link>https://aaroncaldwell.us/project/shinyexactapp/</link>
+      <pubDate>Mon, 11 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/shinyexactapp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Monte Carlo Power Shiny App</title>
+      <link>https://aaroncaldwell.us/project/shinypowerapp/</link>
+      <pubDate>Mon, 11 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/shinypowerapp/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Superpower R package</title>
+      <link>https://aaroncaldwell.us/project/superpowerrpackage/</link>
+      <pubDate>Mon, 11 Nov 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/superpowerrpackage/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>3 | Aaron Caldwell</title>
+    <link>https://aaroncaldwell.us/publication_types/3/</link>
+      <atom:link href="https://aaroncaldwell.us/publication_types/3/index.xml" rel="self" type="application/rss+xml" />
+    <description>3</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Tue, 01 Oct 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://aaroncaldwell.us/media/logo.png</url>
+      <title>3</title>
+      <link>https://aaroncaldwell.us/publication_types/3/</link>
+    </image>
+    
+    <item>
+      <title>On the Statistical Properties of the Dankel-Loenneke Method</title>
+      <link>https://aaroncaldwell.us/publication/responderslte/</link>
+      <pubDate>Tue, 01 Oct 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/publication/responderslte/</guid>
+      <description>&lt;p&gt;Letter-to-editor on responder-non-responder analysis proposed in &lt;em&gt;Sports Medicine&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Citeable as&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;Tenan, M., Vigotsky, A. D., &amp;amp; Caldwell, A. R. (2019, October 1). On the Statistical Properties of the Dankel-Loenneke Method. &lt;em&gt;SportRxiv&lt;/em&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

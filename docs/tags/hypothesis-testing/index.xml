@@ -1,0 +1,943 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>hypothesis testing | Aaron Caldwell</title>
+    <link>https://aaroncaldwell.us/tags/hypothesis-testing/</link>
+      <atom:link href="https://aaroncaldwell.us/tags/hypothesis-testing/index.xml" rel="self" type="application/rss+xml" />
+    <description>hypothesis testing</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Fri, 20 Nov 2020 07:40:07 -0500</lastBuildDate>
+    <image>
+      <url>https://aaroncaldwell.us/media/logo.png</url>
+      <title>hypothesis testing</title>
+      <link>https://aaroncaldwell.us/tags/hypothesis-testing/</link>
+    </image>
+    
+    <item>
+      <title>Increasing testing severity in multi-group designs</title>
+      <link>https://aaroncaldwell.us/post/severity-multigroup/</link>
+      <pubDate>Fri, 20 Nov 2020 07:40:07 -0500</pubDate>
+      <guid>https://aaroncaldwell.us/post/severity-multigroup/</guid>
+      <description>
+
+
+&lt;div id=&#34;introduction&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Introduction&lt;/h1&gt;
+&lt;p&gt;A little over a year ago Patrick Forscher wrote a very nice blog post about a simple way to increase the severity of a hypothesis test in a multi-group experimental design (in this case one factor, 3-group design). He highlights the main problem as the following:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Multi-group designs are the workhorse of scientific psychology. Multi-group designs apply to any grouping of people, within-person states, situations, or stimuli; interest typically centers around the either the means or conditional means within each group. However, theory-testing using these means typically proceeds in just the way that Meehl criticized: scientists attempt to reject a null hypothesis of no group mean differences (which, due to Meehl’s “crud”, may be trivially false a priori), then follow up the rejected null hypothesis with tests intended to diagnose the pattern that produced the rejected null.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;I agree that this is systemic problem. People sometimes default to just plugging numbers into a one-way ANOVA and usually conclude that their hypothesis is confirmed simply by a significant ANOVA-level effect. Patrick’s proposed solution to the problem is &lt;em&gt;a priori&lt;/em&gt; orthogonal contrasts. As a quick aside, I am always shocked at how few people know about orthogonal contrasts. This was drilled into my head by my statistics professors at Arkansas (Thank you Ronna Turner and Sean Mulvenon!). For more details on orthogonal contrasts (and experimental design altogether), I highly recommend purchasing a copy of &lt;a href=&#34;https://designingexperiments.com/&#34;&gt;“Designing Experiments and Analyzing Data”&lt;/a&gt; by Maxwell, Delaney, and Kelley (2018). It covers this and numerous other topics; you won’t find a better value in a statistics textbook.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;r-code&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;R Code&lt;/h1&gt;
+&lt;p&gt;Now I will go through the code in R for how to implement Patrick’s approach using the &lt;code&gt;afex&lt;/code&gt; and &lt;code&gt;emmeans&lt;/code&gt; package. For more details on &lt;em&gt;why&lt;/em&gt; you should use this approach please read Patrick’s &lt;a href=&#34;http://persistentastonishment.blogspot.com/2019/02/increasing-testing-severity-in-multi.html&#34;&gt;blogpost&lt;/a&gt;!&lt;/p&gt;
+&lt;div id=&#34;orthogonal-contrasts&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Orthogonal Contrasts&lt;/h2&gt;
+&lt;p&gt;There are many helper functions in R that make it easy to use orthogonal contrasts without having to write out the contrasts by hand. I will show these later but I quickly want to show a technique for checking your set of contrasts to ensure they are in fact orthogonal. Essentially, I have a function that takes the contrasts as matrix and calculates the cross-products of the matrix. If any off-diagonal element is not equal to zero then the contrasts are not orthogonal. Please note, that I made this function in ~2 minutes so I haven’t quite checked to ensure it works in all situations.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# build function
+check_orthog = function(contrast_mat) {
+  check_off = crossprod(contrast_mat)
+  upper_check = sum(check_off*upper.tri(check_off))
+  lower_check = sum(check_off*lower.tri(check_off))
+  if (upper_check == 0 &amp;amp;&amp;amp; lower_check == 0) {
+    return(TRUE)
+  } else{
+    return(FALSE)
+  }
+}
+
+# Test with Patrick&amp;#39;s code -- should print TRUE
+
+c1 &amp;lt;- c(-1/2,0,1/2)
+c2 &amp;lt;- c(1/3,-2/3,1/3)
+
+cons = cbind(c1,c2)
+
+check_orthog(cons)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create non-orthogonal contrasts -- should print FALSE
+cons2 = cbind(c(-1,1,0),
+              c(0,-1,1),
+              c(-1,0,1))
+
+check_orthog(cons2)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] FALSE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Another way of coding orthogonal polynomial contrasts. 
+c1 &amp;lt;- c(-1, 0, 1)
+c2 &amp;lt;- c(0.5, -1, 0.5)
+
+cons3 &amp;lt;- cbind(c1,c2)
+
+# Again should print TRUE
+check_orthog(cons3)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;I will use this at points in the blogpost just to check my own contrast coding (please email me if you notice a mistake!).&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;generate-data&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Generate Data&lt;/h2&gt;
+&lt;p&gt;First, I will generate some data. Please note for this portion of the post I will be directly replicating/copying Patrick’s &lt;a href=&#34;https://gist.github.com/schnarrd/f9b217a4eac09f3729d4e2011e04391d&#34;&gt;data and code&lt;/a&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(tidyverse)
+library(afex)
+library(emmeans)
+library(broom)
+
+set.seed(432432) # For reproducibility
+
+# For all examples, I&amp;#39;m using the below sampling error sd and n per cell
+err &amp;lt;- 1
+n_per_cell &amp;lt;- 200
+# I&amp;#39;m also assuming the following:
+# (1) our smallest effect of substantive interest is .4
+# (2) all contrasts are Helment (successively compare one group to the average of the others)
+# (3) all contrasts are unit-weighted
+
+# This method should generalize to other orthogonal contrasts
+# The parameter estimates for unit-weighted Helmert contrasts, however, have a 
+# nice interpretation as a series of mean differences and are therefore easy to understand
+
+
+#### THREE GROUP ####
+
+# Ceofficients for this case. Modify as desired
+# First is the intercept, second is the focal contrast, remainder are the residual contrasts
+coefs &amp;lt;- c(0, .7, .2)
+
+# Create the data
+# The last line creates the outcome using the coefficients above and the desired sampling error, err
+# %*% is matrix multiplication
+dat_three &amp;lt;- data.frame(group = rep(paste(&amp;quot;group&amp;quot;, 1:3), n_per_cell))
+dat_three &amp;lt;- mutate(
+  dat_three,
+  c1 = case_when(group == &amp;quot;group 1&amp;quot; ~ 2 / 3, TRUE ~ -1 /
+                   3),
+  c2 = case_when(group == &amp;quot;group 1&amp;quot; ~ 0, group == &amp;quot;group 2&amp;quot; ~ 1 /
+                   2, TRUE ~ -1 / 2),
+  outcome = as.vector(cbind(1, c1, c2) %*% coefs + rnorm(nrow(dat_three), sd =
+                                                           err))
+) %&amp;gt;%
+  mutate(group = factor(group,
+                        levels = c(&amp;quot;group 1&amp;quot;,
+                                   &amp;quot;group 2&amp;quot;,
+                                   &amp;quot;group 3&amp;quot;),
+                        ordered = TRUE)) # creates and ordered &amp;amp; labeled factor for group
+
+
+knitr::kable(head(dat_three),
+             caption = &amp;quot;3-group data&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:step1&#34;&gt;Table 1: &lt;/span&gt;3-group data&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c1&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c2&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;outcome&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6666667&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1940993&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5684096&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3451584&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6666667&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.4218414&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2550905&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.3534099&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now, we have some data to work with. However, rather than simply using the &lt;code&gt;lm&lt;/code&gt; function to make the contrast comparisons I will use &lt;code&gt;afex&lt;/code&gt; to build the model and then &lt;code&gt;emmeans&lt;/code&gt; to apply the specific contrasts.&lt;/p&gt;
+&lt;/div&gt;
+&lt;div id=&#34;three-group-example&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Three Group Example&lt;/h2&gt;
+&lt;p&gt;In Patrick’s post he used the &lt;code&gt;lm&lt;/code&gt; function to test the contrasts. I think this fine but may be difficult to understand for many beginners. Plus any addition comparisons will have to be made by creating a new model. This is why I prefer using &lt;code&gt;afex&lt;/code&gt;: it has an easier to use interface and the model can be passed onto &lt;code&gt;emmeans&lt;/code&gt; for specific additional comparisons. If Patrick’s approach works for you that is great, but I want to make sure people know of alternative approaches.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Patrick&amp;#39;s Example
+m_three &amp;lt;- lm(outcome ~ c1 + c2, data=dat_three)
+knitr::kable(tidy(m_three),
+             caption = &amp;quot;3-group Contrasts using lm&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-1&#34;&gt;Table 2: &lt;/span&gt;3-group Contrasts using lm&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;term&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;statistic&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0437823&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0417829&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.047853&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2951303&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6570966&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0886348&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.413527&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1873883&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1023467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.830918&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0676111&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now, let us go through the same process with &lt;code&gt;afex&lt;/code&gt; and &lt;code&gt;emmeans&lt;/code&gt;. We will need to create an &lt;code&gt;id&lt;/code&gt; column so that &lt;code&gt;afex&lt;/code&gt; knows that these are all between-subject comparisons. I also like to have the partial eta squared (&lt;span class=&#34;math inline&#34;&gt;\(\eta^2\)&lt;/span&gt;) for the default effect size output so I am also going to set this using the &lt;code&gt;afex_options&lt;/code&gt; function.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Add subject id
+dat_three = rowid_to_column(dat_three, var = &amp;quot;id&amp;quot;)
+afex_options(es_aov = &amp;quot;pes&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Build model using afex; note we must have an error term &amp;quot;(1|id)&amp;quot;
+afex_three = afex::aov_4(outcome ~ group + (1|id),
+                         data = dat_three)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Contrasts set to contr.sum for the following variables: group&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Output tyical ANOVA table with type-3 SS
+knitr::kable(nice(afex_three))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;Effect&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;MSE&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;F&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;pes&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;2, 597&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1.05&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;29.16 ***&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;.089&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;&amp;lt;.001&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Most people reading this should be familiar with the table above. It is a simple one-way ANOVA output.&lt;/p&gt;
+&lt;p&gt;Now I can make the same comparisons Patrick made with &lt;code&gt;lm&lt;/code&gt; using &lt;code&gt;emmeans&lt;/code&gt;. However, I can also make my tests directionl using the &lt;code&gt;side&lt;/code&gt; argument in the &lt;code&gt;contrast&lt;/code&gt; function.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Now get emmeans
+emm_three = emmeans(afex_three, ~group)
+
+# Estimated marginal means
+knitr::kable(tidy(emm_three) %&amp;gt;%
+               select(-df,-statistic,-p.value))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.4818467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.07237&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.0815557&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.07237&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.2689441&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.07237&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create orthogonal contrasts
+con_three = list(c1 = c(1,-.5,-.5),
+                 c2 = c(0,1,-1))
+check_orthog(cbind(con_three$c1,
+                   con_three$c2))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Make comparisons with contrast function
+knitr::kable(contrast(emm_three,con_three),
+             caption = &amp;quot;3-group emmeans contrasts&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:threegroupemm&#34;&gt;Table 3: &lt;/span&gt;3-group emmeans contrasts&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6570966&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0886348&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.413527&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1873883&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1023467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.830918&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0676111&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;knitr::kable(contrast(emm_three,con_three,
+                      side = &amp;quot;&amp;gt;&amp;quot;),
+             caption = &amp;quot;3-group emmeans w/ directional contrasts&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:threegroupemm&#34;&gt;Table 3: &lt;/span&gt;3-group emmeans w/ directional contrasts&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6570966&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0886348&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.413527&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1873883&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1023467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.830918&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0338055&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Patrick also mentions that we would want to perform equivalence tests to rule out that the differences are within our equivalence bounds (answers the question “Are these contrast differences, if they exist, smaller than what we consider meaningful?”). Remember, &lt;code&gt;c1&lt;/code&gt; is “group 1 - group 2 &amp;amp; group 3” and c2 is “group 2 - group 3”.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create contrast
+con_three_eq = contrast(emm_three,con_three) 
+# Perform equivalence test (takes absolute difference)
+test_three_eq = test(con_three_eq,
+                     delta = .4, # eq bound
+                     side = &amp;quot;equivalence&amp;quot;)
+knitr::kable(test_three_eq,
+             caption = &amp;quot;Equivalence Tests for 3-group example&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:threegroupequ&#34;&gt;Table 4: &lt;/span&gt;Equivalence Tests for 3-group example&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6570966&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0886348&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.900628&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9980694&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1873883&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1023467&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;597&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-2.077368&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0190973&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&#34;four-group-example&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Four Group Example&lt;/h2&gt;
+&lt;p&gt;Again, we will need to generate the same data that Patrick did in his post.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;#### FOUR GROUP ####
+
+# Ceofficients for this case. Modify as desired
+# First is the intercept, second is the focal contrast, remainder are the residual contrasts
+coefs &amp;lt;- c(0, .7, .2, .1)
+
+# Create the data
+# The last line creates the outcome using the coefficients above and the desired sampling error, err
+# %*% is matrix multiplication
+dat_four &amp;lt;- data.frame(group = rep(paste(&amp;quot;group&amp;quot;, 1:4), 
+                                   n_per_cell))
+dat_four &amp;lt;- mutate(
+  dat_four,
+  c1 = case_when(group == &amp;quot;group 1&amp;quot; ~ -3 / 4, TRUE ~ 1 /
+                   4),
+  c2 = case_when(group == &amp;quot;group 1&amp;quot; ~ 0, 
+                 group == &amp;quot;group 2&amp;quot; ~ 2 /
+                   3, TRUE ~ -1 / 3),
+  c3 = case_when(
+    group %in% c(&amp;quot;group 1&amp;quot;, &amp;quot;group 2&amp;quot;) ~ 0,
+    group == &amp;quot;group 3&amp;quot; ~ 1 / 2,
+    TRUE ~ -1 / 2
+  ),
+  outcome = as.vector(cbind(1, 
+                            c1,
+                            c2, 
+                            c3) %*% coefs + rnorm(nrow(dat_four), 
+                                                  sd = err))
+) %&amp;gt;%
+  mutate(group = factor(
+    group,
+    levels = c(&amp;quot;group 1&amp;quot;,
+               &amp;quot;group 2&amp;quot;,
+               &amp;quot;group 3&amp;quot;,
+               &amp;quot;group 4&amp;quot;),
+    ordered = TRUE
+  )) %&amp;gt;% # creates and ordered &amp;amp; labeled factor for group
+rowid_to_column(var = &amp;quot;id&amp;quot;)
+
+knitr::kable(head(dat_four),
+             caption = &amp;quot;4-Groups Data&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-4&#34;&gt;Table 5: &lt;/span&gt;4-Groups Data&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;right&#34;&gt;id&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c1&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c2&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;c3&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;outcome&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;1&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.75&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.6004404&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6666667&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.4770844&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;3&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.2156623&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;4&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 4&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.3333333&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.1881092&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;5&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.75&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.4617127&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;6&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.25&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.6666667&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0611009&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Now, we replicate the process to build our base model.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Build model using afex; note we must have an error term &amp;quot;(1|id)&amp;quot;
+afex_four = afex::aov_4(outcome ~ group + (1|id),
+                         data = dat_four)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Contrasts set to contr.sum for the following variables: group&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Output tyical ANOVA table with type-3 SS
+knitr::kable(nice(afex_four),
+             caption = &amp;quot;ANOVA: Four Groups&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-5&#34;&gt;Table 6: &lt;/span&gt;ANOVA: Four Groups&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;Effect&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;MSE&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;F&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;pes&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;3, 796&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;1.02&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;25.52 ***&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;.088&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;&amp;lt;.001&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;And, we can then pass on this model to the &lt;code&gt;emmeans&lt;/code&gt; function to make our specific contrasts.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Now get emmeans
+emm_four = emmeans(afex_four, ~group,
+                   adjust = &amp;quot;none&amp;quot;)
+
+# Estimated marginal means
+knitr::kable(tidy(emm_four) %&amp;gt;%
+               select(-df,-statistic,-p.value))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.5275826&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0714616&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.3089254&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0714616&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1323786&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0714616&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group 4&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0253503&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0714616&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Create orthogonal contrasts
+con_four = list(c1 = c(1,-1/3,-1/3,-1/3),
+                c2 = c(0,1,-0.5,-0.5),
+                c3 = c(0,0,.5,-.5))
+check_orthog(cbind(con_four$c1,
+                   con_four$c2,
+                   con_four$c3))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Perform joint test
+knitr::kable(test(contrast(emm_four,
+                           con_four[2:3]),
+                  joint = TRUE),
+             caption = &amp;quot;Joint Test of Residual Contrasts&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:fourgroupemm&#34;&gt;Table 7: &lt;/span&gt;Joint Test of Residual Contrasts&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;right&#34;&gt;df1&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df2&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;F.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;right&#34;&gt;2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;4.016&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0183995&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;We start by performing “joint test” of the residual hypotheses (Note: &lt;code&gt;c1&lt;/code&gt; is the focal hypothesis so we only include &lt;code&gt;c2&lt;/code&gt; and &lt;code&gt;c3&lt;/code&gt;). Now, we observed that our residual contrasts actually account for a significant portion of the variance.&lt;/p&gt;
+&lt;p&gt;So, we can perform equivalence testing for these contrasts. We find that &lt;code&gt;c2&lt;/code&gt; and &lt;code&gt;c3&lt;/code&gt; are within our equivalence bounds.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Make comparisons with contrast function
+knitr::kable(test(contrast(emm_four,
+                           con_four),
+                  delta = .4,
+                  side = &amp;quot;equivalence&amp;quot;),
+             caption = &amp;quot;4-group equivalence contrasts&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-6&#34;&gt;Table 8: &lt;/span&gt;4-group equivalence contrasts&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.6831340&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0825167&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.431233&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9996841&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.2300610&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0875222&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.941668&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0262649&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c3&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0535141&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0505310&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-6.856903&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0000000&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Then, we can finally test focal hypothesis &lt;code&gt;c1&lt;/code&gt;.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;knitr::kable(tidy(contrast(emm_four,con_four[1])),
+             caption = &amp;quot;4-group: c1 contrast&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-7&#34;&gt;Table 9: &lt;/span&gt;4-group: c1 contrast&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;term&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;null.value&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;statistic&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;group&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-0.683134&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0825167&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;796&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-8.278736&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;From these results Patrick concludes the following (and I agree).&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In this case, although the deviation from the focal contrast is significantly different from zero, we can say that the amount of deviation is smaller than our threshold for what constitutes a meaningful effect. If we think that any deviation from the focal contrast is reason for concern, we might think about amending our theory. If, on the other hand, we believe that the null hypothesis of no relationship is basically always false and that many of these non-zero relationships are “crud”, we might advance the claim that our theory has been corroborated. In either case our testing procedure is more severe than a mere test of the null hypothesis of no differences between group means.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Another way of saying this is the following: despite the data being incompatibility with the focal contrast (evidenced by the joint test), the differences observed in these other contrasts is small or within the established equivalence bounds. Meanwhile, we can reject the null hypothesis that our focal contrast is zero.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div id=&#34;extension-to-multilevelhierarchical-models&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Extension to Multilevel/Hierarchical Models&lt;/h1&gt;
+&lt;p&gt;In many cases, the designs that Patrick laid out are as simple or clean as a 3-group one-way ANOVA. Very often we have multiple levels of variance we would like to take into account. The most common example, and one I will repeat here, is in education wherein we have students inside classes within schools. In addition, we often have covariates that (like gender, socioecononimc status, or age) and we need to include those in our models.&lt;/p&gt;
+&lt;p&gt;So, I will apply Patrick’s approach to a study where we have test scores on students within classes within schools. We also have informative covariates such as age and gender on the test scores. Let us say we are testing the hypothesis that our intended treatments (groups 2 and 3) will have a positive effect, &lt;em&gt;and&lt;/em&gt; there will be an additional benefit for treatment group 3. Therefore, we will have similar contrasts to the original 3-group example except we will reverse the coding &lt;em&gt;and&lt;/em&gt; only have one-sided tests because I specified directional hypotheses.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;library(simstudy)
+# taken from https://kgoldfeld.github.io/simstudy/articles/clustered.html
+gen.school &amp;lt;- defData(
+  varname = &amp;quot;s0&amp;quot;,
+  dist = &amp;quot;normal&amp;quot;,
+  formula = 0,
+  variance = 3,
+  id = &amp;quot;idSchool&amp;quot;
+)
+gen.school &amp;lt;- defData(gen.school,
+                      varname = &amp;quot;nClasses&amp;quot;,
+                      dist = &amp;quot;noZeroPoisson&amp;quot;,
+                      formula = 3)
+
+set.seed(282721)
+
+dtSchool &amp;lt;- genData(8, gen.school)
+dtSchool &amp;lt;- trtAssign(dtSchool, nTrt = 3)
+
+gen.class &amp;lt;-
+  defDataAdd(
+    varname = &amp;quot;c0&amp;quot;,
+    dist = &amp;quot;normal&amp;quot;,
+    formula = 0,
+    variance = 2
+  )
+gen.class &amp;lt;-
+  defDataAdd(gen.class,
+             varname = &amp;quot;nStudents&amp;quot;,
+             dist = &amp;quot;noZeroPoisson&amp;quot;,
+             formula = 20)
+
+dtClass &amp;lt;-
+  genCluster(dtSchool,
+             &amp;quot;idSchool&amp;quot;,
+             numIndsVar = &amp;quot;nClasses&amp;quot;,
+             level1ID = &amp;quot;idClass&amp;quot;)
+dtClass &amp;lt;- addColumns(gen.class, dtClass) %&amp;gt;%
+  mutate(t2 = ifelse(trtGrp == 2, 1, 0),
+         t3 = ifelse(trtGrp == 3, 1, 0))
+  
+
+gen.student &amp;lt;- defDataAdd(varname = &amp;quot;Male&amp;quot;,
+                          dist = &amp;quot;binary&amp;quot;,
+                          formula = 0.5)
+gen.student &amp;lt;-
+  defDataAdd(gen.student,
+             varname = &amp;quot;age&amp;quot;,
+             dist = &amp;quot;uniform&amp;quot;,
+             formula = &amp;quot;9.5; 10.5&amp;quot;)
+gen.student &amp;lt;-
+  defDataAdd(
+    gen.student,
+    varname = &amp;quot;test&amp;quot;,
+    dist = &amp;quot;normal&amp;quot;,
+    formula = &amp;quot;50 - 2*Male + s0 + c0 + 4 * t2 + 12 * t3&amp;quot;,
+    variance = 2
+  )
+dtStudent &amp;lt;-
+  genCluster(
+    dtClass,
+    cLevelVar = &amp;quot;idClass&amp;quot;,
+    numIndsVar = &amp;quot;nStudents&amp;quot;,
+    level1ID = &amp;quot;idChild&amp;quot;
+  )
+
+con_three = list(c1 = c(-1,.5,.5),
+                 c2 = c(0,1,-1))
+check_orthog(cbind(con_three$c1,
+                   con_three$c2))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;dat_mlm &amp;lt;- addColumns(gen.student, dtStudent) %&amp;gt;%
+  select(-s0,-c0,-t2,-t3) %&amp;gt;%
+  mutate(trtGrp = factor(trtGrp,
+                         levels = c(1,2,3),
+                         ordered = TRUE))&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Now we can utilize the &lt;code&gt;lme4&lt;/code&gt; package to build the mlm and use &lt;code&gt;emmeans&lt;/code&gt; plot function to take a glimpse at the difference between groups.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;test_mlm = lme4::lmer(test ~ Male + trtGrp + (1|idClass:idSchool) + (1|idSchool),
+                      data = dat_mlm)
+knitr::kable(broom.mixed::tidy(test_mlm),
+             caption = &amp;quot;Summary Table of MLM&amp;quot;)&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## Registered S3 method overwritten by &amp;#39;broom.mixed&amp;#39;:
+##   method      from 
+##   tidy.gamlss broom&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;caption&gt;&lt;span id=&#34;tab:unnamed-chunk-9&#34;&gt;Table 10: &lt;/span&gt;Summary Table of MLM&lt;/caption&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;effect&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;group&lt;/th&gt;
+&lt;th align=&#34;left&#34;&gt;term&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;std.error&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;statistic&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;fixed&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;55.9993351&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.5561662&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;100.688138&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;fixed&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Male&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-1.7990154&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.1491026&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;-12.065621&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;fixed&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;trtGrp.L&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.6402443&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.7468733&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.229640&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;fixed&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;trtGrp.Q&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;2.0859008&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.1211914&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.860432&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;ran_pars&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;idClass:idSchool&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;sd__(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.4617520&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;ran_pars&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;idSchool&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;sd__(Intercept)&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9791225&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;ran_pars&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;Residual&lt;/td&gt;
+&lt;td align=&#34;left&#34;&gt;sd__Observation&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.5290580&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;NA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;# Plot estimated differences between treatments
+emm_mlm = emmeans(test_mlm, ~ trtGrp)
+plot(emm_mlm)&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;img src=&#34;https://aaroncaldwell.us/post/2020-11-20-severity-multigroup.en_files/figure-html/unnamed-chunk-9-1.png&#34; width=&#34;672&#34; /&gt;&lt;/p&gt;
+&lt;p&gt;Finally, we can apply &lt;code&gt;emmeans&lt;/code&gt; to look at the our specific contrasts. For these multi-level models &lt;code&gt;emmeans&lt;/code&gt; defaults to Kenword-Roger degrees of freedom.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;con_mlm = list(c1 = c(-1,.5,.5),
+                 c2 = c(0,-1,1))
+check_orthog(cbind(con_mlm$c1,
+                   con_mlm$c2))&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;## [1] TRUE&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;knitr::kable(test(contrast(emm_mlm, con_mlm),
+                  side = &amp;quot;&amp;gt;&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.826355&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.030733&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5.934995&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.622817&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0002986&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.957165&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.489940&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.030437&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5.340594&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.0001623&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;We see that our data is incompatible with the null hypotheses. We may also want to include &lt;a href=&#34;https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5898747/&#34;&gt;“conditional equivalence tests”&lt;/a&gt; to ensure that our effects are not within a range we deem practically equivalent. Therefore, we can use almost the same code as the chunk above but add a &lt;code&gt;delta&lt;/code&gt; argument as well as change the &lt;code&gt;side&lt;/code&gt; argument to “equivalent”.&lt;/p&gt;
+&lt;pre class=&#34;r&#34;&gt;&lt;code&gt;knitr::kable(test(contrast(emm_mlm, con_mlm),
+                  delta = 2,
+                  side = &amp;quot;equivalent&amp;quot;))&lt;/code&gt;&lt;/pre&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr class=&#34;header&#34;&gt;
+&lt;th align=&#34;left&#34;&gt;contrast&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;estimate&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;SE&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;df&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;t.ratio&lt;/th&gt;
+&lt;th align=&#34;right&#34;&gt;p.value&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr class=&#34;odd&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c1&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;6.826355&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.030733&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;5.934995&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;4.682450&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9982574&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr class=&#34;even&#34;&gt;
+&lt;td align=&#34;left&#34;&gt;c2&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;7.957165&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;1.489940&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;10.030437&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;3.998258&lt;/td&gt;
+&lt;td align=&#34;right&#34;&gt;0.9987449&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;/div&gt;
+&lt;div id=&#34;conclusion&#34; class=&#34;section level1&#34;&gt;
+&lt;h1&gt;Conclusion&lt;/h1&gt;
+&lt;p&gt;As you can see the process of creating specific contrasts is fairly straightforward in R and the hypothesis testing procedures are simplified by using the &lt;code&gt;emmeans&lt;/code&gt; package. I find contrast coding to be a refreshing alternative to the typical inspection of “ANOVA-level” effects that is often followed up pairwise comparisions between the levels of a factor where there is a significant effect. Instead, contrast coding demands that the user be specific in their hypotheses. As Patrick notes in his blog post, specifying these contrasts &lt;em&gt;a priori&lt;/em&gt; in many cases may result in a more severe tests of your hypotheses which arguably increases the strength of your claims if your experiments support your hypotheses. In my opinion there is added advantage in how you can go about describign your results (no need for the mundane langauge about “significant main effects”). Also, orthogonal contrasts, by nature, do not require adjustments for multiplicity and therefore may be more statistical powerful than default ANOVA tests. I’ll admit that orthogonal contrasts are not a silver bullet (there is no free lunch in statistics), but I do believe there many experiments that would benefit from this type of analysis.&lt;/p&gt;
+&lt;div id=&#34;miscellaneous-notes&#34; class=&#34;section level2&#34;&gt;
+&lt;h2&gt;Miscellaneous Notes&lt;/h2&gt;
+&lt;p&gt;There are other ways to code contrasts. This post by Rose Maier notes a way of performing contrasts with the &lt;code&gt;summary&lt;/code&gt; function.
+&lt;a href=&#34;https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html&#34; class=&#34;uri&#34;&gt;https://rstudio-pubs-static.s3.amazonaws.com/65059_586f394d8eb84f84b1baaf56ffb6b47f.html&lt;/a&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
