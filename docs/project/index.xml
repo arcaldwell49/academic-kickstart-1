@@ -5,12 +5,20 @@
     <link>https://aaroncaldwell.us/project/</link>
       <atom:link href="https://aaroncaldwell.us/project/index.xml" rel="self" type="application/rss+xml" />
     <description>Projects</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 11 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 20 Dec 2021 00:00:00 +0000</lastBuildDate>
     <image>
       <url>https://aaroncaldwell.us/media/logo.png</url>
       <title>Projects</title>
       <link>https://aaroncaldwell.us/project/</link>
     </image>
+    
+    <item>
+      <title>SimplyAgree R package and jamovi module</title>
+      <link>https://aaroncaldwell.us/project/simplyagree/</link>
+      <pubDate>Mon, 20 Dec 2021 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/simplyagree/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Exact Simulation Power Shiny App</title>

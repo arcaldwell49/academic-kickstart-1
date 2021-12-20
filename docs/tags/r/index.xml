@@ -5,12 +5,20 @@
     <link>https://aaroncaldwell.us/tags/r/</link>
       <atom:link href="https://aaroncaldwell.us/tags/r/index.xml" rel="self" type="application/rss+xml" />
     <description>R</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Fri, 20 Nov 2020 07:40:07 -0500</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 20 Dec 2021 00:00:00 +0000</lastBuildDate>
     <image>
       <url>https://aaroncaldwell.us/media/logo.png</url>
       <title>R</title>
       <link>https://aaroncaldwell.us/tags/r/</link>
     </image>
+    
+    <item>
+      <title>SimplyAgree R package and jamovi module</title>
+      <link>https://aaroncaldwell.us/project/simplyagree/</link>
+      <pubDate>Mon, 20 Dec 2021 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/simplyagree/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Increasing testing severity in multi-group designs</title>

@@ -3,7 +3,22 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://aaroncaldwell.us/</loc>
-    <lastmod>2021-01-29T16:39:18-05:00</lastmod>
+    <lastmod>2021-12-20T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://aaroncaldwell.us/project/</loc>
+    <lastmod>2021-12-20T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://aaroncaldwell.us/tags/r/</loc>
+    <lastmod>2021-12-20T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://aaroncaldwell.us/project/simplyagree/</loc>
+    <lastmod>2021-12-20T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://aaroncaldwell.us/tags/statistics/</loc>
+    <lastmod>2021-12-20T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://aaroncaldwell.us/tags/</loc>
+    <lastmod>2021-12-20T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://aaroncaldwell.us/categories/</loc>
     <lastmod>2021-01-29T16:39:18-05:00</lastmod>
@@ -26,9 +41,6 @@
     <loc>https://aaroncaldwell.us/categories/statistics/</loc>
     <lastmod>2021-01-29T16:39:18-05:00</lastmod>
   </url><url>
-    <loc>https://aaroncaldwell.us/tags/</loc>
-    <lastmod>2021-01-29T16:39:18-05:00</lastmod>
-  </url><url>
     <loc>https://aaroncaldwell.us/tags/contrasts/</loc>
     <lastmod>2020-11-20T07:40:07-05:00</lastmod>
   </url><url>
@@ -42,12 +54,6 @@
     <lastmod>2020-11-20T07:40:07-05:00</lastmod>
   </url><url>
     <loc>https://aaroncaldwell.us/tags/polynomial/</loc>
-    <lastmod>2020-11-20T07:40:07-05:00</lastmod>
-  </url><url>
-    <loc>https://aaroncaldwell.us/tags/r/</loc>
-    <lastmod>2020-11-20T07:40:07-05:00</lastmod>
-  </url><url>
-    <loc>https://aaroncaldwell.us/tags/statistics/</loc>
     <lastmod>2020-11-20T07:40:07-05:00</lastmod>
   </url><url>
     <loc>https://aaroncaldwell.us/post/stats-collab/</loc>
@@ -81,9 +87,6 @@
     <lastmod>2019-11-11T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://aaroncaldwell.us/project/shinypowerapp/</loc>
-    <lastmod>2019-11-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://aaroncaldwell.us/project/</loc>
     <lastmod>2019-11-11T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://aaroncaldwell.us/tags/shiny/</loc>
@@ -128,7 +131,13 @@
     <loc>https://aaroncaldwell.us/publication/temp_review/</loc>
     <lastmod>2019-05-28T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://aaroncaldwell.us/authors/daniel-lakens-aaron-r.-caldwell/</loc>
+    <loc>https://aaroncaldwell.us/publication_types/1/</loc>
+    <lastmod>2019-05-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://aaroncaldwell.us/authors/aaron-r.-caldwell/</loc>
+    <lastmod>2019-05-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://aaroncaldwell.us/authors/daniel-lakens/</loc>
     <lastmod>2019-05-21T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://aaroncaldwell.us/publication/anova_simulation/</loc>

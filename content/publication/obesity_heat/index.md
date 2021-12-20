@@ -7,13 +7,13 @@ date = "2018-08-16"
 math = false
 publication_types = ["2"]
 publication = "PeerJ"
-publication_short = "Obesity and Mental Tasks"
+publication_short = "PeerJ"
 selected = false
 featured = false
 title = "Obesity, but not hypohydration, mediates changes in mental task load during passive heating in females"
 # url_code = ""
 # url_dataset = ""
-url_pdf = "https://peerj.com/articles/5394/?utm_source=TrendMD&utm_campaign=PeerJ_TrendMD_1&utm_medium=TrendMD"
+url_pdf = "pdf/obesity_heat.pdf"
 #url_project = ""
 # url_slides = ""
 # url_video = ""

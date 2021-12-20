@@ -5,12 +5,20 @@
     <link>https://aaroncaldwell.us/</link>
       <atom:link href="https://aaroncaldwell.us/index.xml" rel="self" type="application/rss+xml" />
     <description>Aaron Caldwell</description>
-    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Fri, 29 Jan 2021 16:39:18 -0500</lastBuildDate>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Mon, 20 Dec 2021 00:00:00 +0000</lastBuildDate>
     <image>
       <url>https://aaroncaldwell.us/media/logo.png</url>
       <title>Aaron Caldwell</title>
       <link>https://aaroncaldwell.us/</link>
     </image>
+    
+    <item>
+      <title>SimplyAgree R package and jamovi module</title>
+      <link>https://aaroncaldwell.us/project/simplyagree/</link>
+      <pubDate>Mon, 20 Dec 2021 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/project/simplyagree/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Simulating a Study with a Binary Outcome</title>
@@ -2628,7 +2636,7 @@ Therefore, I have created a short list of items that should always be included i
       <guid>https://aaroncaldwell.us/publication/anova_simulation/</guid>
       <description>&lt;p&gt;A tutorial article on using the Superpower R package.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Citeable as&lt;/strong&gt;:&lt;/p&gt;
-&lt;p&gt;Lakens, D., &amp;amp; Caldwell, A. R. (2019). Simulation-Based Power-Analysis for Factorial ANOVA Designs. &lt;em&gt;PsyArXiv&lt;/em&gt; &lt;a href=&#34;https://doi.org/10.31234/osf.io/baxsf&#34;&gt;https://doi.org/10.31234/osf.io/baxsf&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Lakens, D., &amp;amp; Caldwell, A. R. (2019). Simulation-Based Power-Analysis for Factorial ANOVA Designs. &lt;em&gt;Advances in Methods and Practices in Psychological Science&lt;/em&gt; &lt;a href=&#34;https://doi.org/10.31234/osf.io/baxsf&#34;&gt;https://doi.org/10.31234/osf.io/baxsf&lt;/a&gt;&lt;/p&gt;
 </description>
     </item>
     

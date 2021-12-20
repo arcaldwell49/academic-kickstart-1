@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Aaron R. Caldwell | Aaron Caldwell</title>
+    <link>https://aaroncaldwell.us/authors/aaron-r.-caldwell/</link>
+      <atom:link href="https://aaroncaldwell.us/authors/aaron-r.-caldwell/index.xml" rel="self" type="application/rss+xml" />
+    <description>Aaron R. Caldwell</description>
+    <generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>en-us</language><lastBuildDate>Tue, 21 May 2019 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://aaroncaldwell.us/media/logo.png</url>
+      <title>Aaron R. Caldwell</title>
+      <link>https://aaroncaldwell.us/authors/aaron-r.-caldwell/</link>
+    </image>
+    
+    <item>
+      <title>Simulation-Based Power-Analysis for Factorial ANOVA Designs</title>
+      <link>https://aaroncaldwell.us/publication/anova_simulation/</link>
+      <pubDate>Tue, 21 May 2019 00:00:00 +0000</pubDate>
+      <guid>https://aaroncaldwell.us/publication/anova_simulation/</guid>
+      <description>&lt;p&gt;A tutorial article on using the Superpower R package.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Citeable as&lt;/strong&gt;:&lt;/p&gt;
+&lt;p&gt;Lakens, D., &amp;amp; Caldwell, A. R. (2019). Simulation-Based Power-Analysis for Factorial ANOVA Designs. &lt;em&gt;Advances in Methods and Practices in Psychological Science&lt;/em&gt; &lt;a href=&#34;https://doi.org/10.31234/osf.io/baxsf&#34;&gt;https://doi.org/10.31234/osf.io/baxsf&lt;/a&gt;&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

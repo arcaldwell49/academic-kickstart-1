@@ -7,7 +7,7 @@ date = "2019-05-21"
 math = false
 publication_types = ["1"]
 publication = "Advances in Methods and Practices in Psychological Science"
-publication_short = "ANOVA Simulations"
+publication_short = "Advances in Methods and Practices in Psychological Science"
 selected = true
 featured = false
 title = "Simulation-Based Power-Analysis for Factorial ANOVA Designs"
@@ -31,4 +31,4 @@ A tutorial article on using the Superpower R package.
 
 **Citeable as**:
 
-Lakens, D., & Caldwell, A. R. (2019). Simulation-Based Power-Analysis for Factorial ANOVA Designs. *PsyArXiv* https://doi.org/10.31234/osf.io/baxsf
+Lakens, D., & Caldwell, A. R. (2019). Simulation-Based Power-Analysis for Factorial ANOVA Designs. *Advances in Methods and Practices in Psychological Science* https://doi.org/10.31234/osf.io/baxsf

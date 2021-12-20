@@ -7,13 +7,13 @@ date = "2017-04-17"
 math = false
 publication_types = ["2"]
 publication = "Clinical Physiology and Functional Imaging"
-publication_short = "Hydration and Stiffness"
+publication_short = "Clinical Physiology and Functional Imaging"
 selected = false
 featured = false
 title = "Hydration status influences the measurement of arterial stiffness."
 # url_code = ""
 # url_dataset = ""
-url_pdf = "https://www.dropbox.com/s/4f3q2g3j34ulcrj/Hydration_Stiffness.pdf?dl=0"
+url_pdf = "pdf/Hydration_Stiffness.pdf"
 #url_project = ""
 # url_slides = ""
 # url_video = ""

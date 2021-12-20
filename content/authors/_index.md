@@ -18,7 +18,7 @@ organizations:
   url: "https://www.usariem.army.mil/"
 
 # Short bio (displayed in user profile at end of posts)
-bio: Hello, and welcome to my website. I am exercise physiologist by training and also work as an applied statistician (Graduate Statistician by the American Statistical Association).
+bio: Hello, and welcome to my personal website. I am exercise physiologist by training and also work as an applied statistician (Graduate Statistician by the American Statistical Association).
 
 interests:
 - Environmental & Exercise Physiology
@@ -66,7 +66,7 @@ user_groups:
 - Visitors
 ---
 
-Hello and welcome to my website. I am a exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. Currently, I work as an ORISE Postdoctoral Fellow at the United States Army Research Institute of Environmental Medicine (USARIEM) where my current research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, I am a applied statistician.  He has gained expertise in statistics through a Graduate Certificate in Statistics & Research Methods program at the University of Arkansas, and I am recognized by the American Statistical Association as a Graduate Statistician (GStat).
+Hello and welcome to my personal website. I am a exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. Currently, I work as an ORISE Postdoctoral Fellow at the United States Army Research Institute of Environmental Medicine (USARIEM) where my current research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, I am a applied statistician.  He has gained expertise in statistics through a Graduate Certificate in Statistics & Research Methods program at the University of Arkansas, and I am recognized by the American Statistical Association as a Graduate Statistician (GStat).
 
 My statistics and coding work can be found on [GitHub](https://github.com/arcaldwell49)
 
