@@ -12,7 +12,7 @@ featured = false
 title = "Effect of Caffeine on Perceived Soreness and Functionality Following an Endurance Cycling Event"
 # url_code = ""
 # url_dataset = ""
-url_pdf = "https://www.dropbox.com/s/6l7v4nira35dctc/JSCR_caffeine.pdf?dl=0"
+url_pdf = "pdf/JSCR_caffeine.pdf"
 #url_project = ""
 # url_slides = ""
 # url_video = ""

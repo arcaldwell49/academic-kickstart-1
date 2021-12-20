@@ -12,7 +12,7 @@ featured = true
 title = "Basic statistical considerations for physiology: The journal Temperature toolbox"
 # url_code = ""
 # url_dataset = ""
-url_pdf = "https://www.dropbox.com/s/5hm6xhi4ica713z/basic_stats.pdf?dl=0"
+url_pdf = "pdf/basic_stats.pdf"
 url_project = "https://doi.org/10.17605/OSF.IO/BQGDH"
 # url_slides = ""
 # url_video = ""

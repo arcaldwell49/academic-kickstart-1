@@ -18,7 +18,7 @@ organizations:
   url: "https://www.usariem.army.mil/"
 
 # Short bio (displayed in user profile at end of posts)
-bio: Aaron is an exercise physiologist by training and also does some work as an applied statistician.
+bio: Hello, and welcome to my website. I am exercise physiologist by training and also work as an applied statistician (Graduate Statistician by the American Statistical Association).
 
 interests:
 - Environmental & Exercise Physiology
@@ -34,7 +34,7 @@ education:
     year: 2015
   - course: B.Sc. in Exercise Science
     institution: Baker University
-    year: 2009
+    year: 2013
 
 # Social/Academic Networking
 # For available icons, see: https://sourcethemes.com/academic/docs/widgets/#icons
@@ -66,10 +66,9 @@ user_groups:
 - Visitors
 ---
 
-Aaron is an exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. He currently works as ORISE Postdoctoral Fellow at the United States Army Research Institute of Environmental Medicine where his research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, Aaron is a applied statistician.  He has gained expertise in statistics through a Graduate Certificate in Statistics & Research Methods program at the University of Arkansas and has published two R packages (`Superpower` and `mbir`) on CRAN.
+Hello and welcome to my website. I am a exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. Currently, I work as an ORISE Postdoctoral Fellow at the United States Army Research Institute of Environmental Medicine (USARIEM) where my current research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, I am a applied statistician.  He has gained expertise in statistics through a Graduate Certificate in Statistics & Research Methods program at the University of Arkansas, and I am recognized by the American Statistical Association as a Graduate Statistician (GStat).
 
+My statistics and coding work can be found on [GitHub](https://github.com/arcaldwell49)
 
-Aaron's statistics and coding work can be found on [GitHub](https://github.com/arcaldwell49)
-
-Learn about his academic work on [ResearchGate](https://researchgate.net/profile/Aaron_Caldwell).
+Learn about my academic work on [ResearchGate](https://researchgate.net/profile/Aaron_Caldwell).
 
