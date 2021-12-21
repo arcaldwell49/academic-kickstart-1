@@ -28,4 +28,4 @@ url_pdf = "pdf/nature.pdf"
 
 **Citeable as**:
 
-Lakens, D., & Caldwell, A. R. (2019). Simulation-Based Power-Analysis for Factorial ANOVA Designs. *Advances in Methods and Practices in Psychological Science* https://doi.org/10.31234/osf.io/baxsf
+Twomey, R., Yingling, V., Warne, J., Schneider, C., McCrum, C., Atkins, W., Murphy, J., Romero Medina, C., Harlley, S., & Caldwell, A. (2021). The Nature of Our Literature: A Registered Report on the Positive Result Rate and Reporting Practices in Kinesiology. *Communications in Kinesiology*, 1(3). https://doi.org/10.51224/cik.v1i3.43
