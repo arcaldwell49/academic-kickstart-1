@@ -7,13 +7,13 @@ date = "2017-08-03"
 math = false
 publication_types = ["2"]
 publication = "European Journal of Applied Physiology"
-publication_short = "Stiffness and Standing"
+publication_short = "European Journal of Applied Physiology"
 selected = false
 featured = false
 title = "Prolonged standing increases lower limb arterial stiffness"
 # url_code = ""
 # url_dataset = ""
-url_pdf = "https://www.dropbox.com/s/e5zf8dxny0j6g7s/STIF1.pdf?dl=0"
+url_pdf = "pdf/STIF1.pdf"
 #url_project = ""
 # url_slides = ""
 # url_video = ""

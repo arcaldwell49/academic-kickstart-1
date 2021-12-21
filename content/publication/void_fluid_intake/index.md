@@ -13,7 +13,7 @@ featured = false
 title = "Adequacy of Daily Fluid Intake Volume Can Be Identified From Urinary Frequency and Perceived Thirst in Healthy Adults"
 # url_code = ""
 # url_dataset = ""
-url_pdf = "https://www.dropbox.com/s/ikfe0lgdeougssp/Tucker_voidfreq.pdf?dl=0"
+url_pdf = "pdf/voidfreq.pdf"
 #url_project = ""
 # url_slides = ""
 # url_video = ""
