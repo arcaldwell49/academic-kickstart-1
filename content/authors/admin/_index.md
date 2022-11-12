@@ -10,7 +10,7 @@ authors:
 superuser: true
 
 # Role/position
-role: ORISE Postdoctoral Fellow
+role: Research Physiologist & Statistician 
 
 # Organizations/Affiliations
 organizations:
@@ -66,7 +66,7 @@ user_groups:
 - Visitors
 ---
 
-Hello and welcome to my personal website! I am an exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. Currently, I work as an ORISE Postdoctoral Fellow at the United States Army Research Institute of Environmental Medicine (USARIEM) where my current research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, I am a applied statistician and recognized by the American Statistical Association as a Graduate Statistician (GStat). My statistical computing work includes the [Superpower](https://aaroncaldwell.us/Superpower), [SimplyAgree](https://aaroncaldwell.us/SimplyAgree), and [TOSTER](https://aaroncaldwell.us/TOSTERpkg) R packages.
+Hello and welcome to my personal website! I am an exercise physiologist with a Ph.D. in Health, Sport, and Exercise Science from the University of Arkansas. Currently, I work as a Research Physiologist (civilian) at the United States Army Research Institute of Environmental Medicine (USARIEM) where my current research projects are focused on human performance in extreme environments (heat, cold, and altitude). In addition, I am a applied statistician and recognized by the American Statistical Association as a Graduate Statistician (GStat). My statistical work includes the [Superpower](https://aaroncaldwell.us/Superpower), [SimplyAgree](https://aaroncaldwell.us/SimplyAgree), and [TOSTER](https://aaroncaldwell.us/TOSTERpkg) R packages. I am also a contributor to the [effectsize](https://easystats.github.io/effectsize/) R package.
 
 My statistics and coding work can be found on [GitHub](https://github.com/arcaldwell49)
 

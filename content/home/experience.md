@@ -17,13 +17,28 @@ date_format = "Jan 2006"
 #   Required fields are `title`, `company`, and `date_start`.
 #   Leave `date_end` empty if it's your current employer.
 #   Begin/end multi-line descriptions with 3 quotes `"""`.
+
+[[experience]]
+  title = "Research Physiologist"
+  company = "USARIEM"
+  company_url = ""
+  location = "Boston, MA"
+  date_start = "2022-05-01"
+  date_end = ""
+  description = """
+  Responsibilities include:
+  
+  * Statistical analysis plans for all division projects
+  * Writing research protocols and organizing team of research assistants
+  * Acting as principal investigator on research projects related to heat and hydration
+  """
 [[experience]]
   title = "Postdoctoral Research Fellow"
   company = "USARIEM/ORISE"
   company_url = ""
   location = "Boston, MA"
   date_start = "2019-08-01"
-  date_end = ""
+  date_end = "2022-05-01"
   description = """
   Responsibilities include:
   
